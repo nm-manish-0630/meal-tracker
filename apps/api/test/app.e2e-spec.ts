@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { describe, it, beforeEach } from '@jest/globals';
+import { describe, it, beforeEach } from 'vitest';
 import request from 'supertest';
 import { AppModule } from './../src/app.module';
 

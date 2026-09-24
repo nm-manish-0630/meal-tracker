@@ -1,4 +1,9 @@
-import { nextJsConfig } from "@repo/eslint-config/next-js";
+import { vueConfig } from '@repo/eslint-config/vue';
 
-/** @type {import("eslint").Linter.Config} */
-export default nextJsConfig;
+/** @type {import("eslint").Linter.Config[]} */
+export default [
+  ...vueConfig,
+  {
+    ignores: ['dist/**'],
+  },
+];
