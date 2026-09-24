@@ -13,15 +13,15 @@ Add a periodic reconciliation step to the existing hourly digest cron: list R2 o
 
 ## Alternatives Considered
 
-| Option | Pros | Cons |
-|---|---|---|
-| Client-side retry with backoff on the confirm call | Catches the common case (transient network blip) with no server-side work | Doesn't help if the client crashes or closes before confirming at all — leaves the gap open |
-| Do nothing | No extra code | Silent, unbounded storage leak against a free-tier quota — unacceptable for a "final product" with no one watching it day to day |
-| **Periodic reconciliation job (chosen)** | Closes the gap regardless of cause; piggybacks on the cron job that already runs hourly, so no new infrastructure; R2 list-objects calls are Class B operations, effectively free at this volume | One more thing the digest endpoint does each run; needs the 24h grace window to avoid racing an in-flight upload |
+| Option                                             | Pros                                                                                                                                                                                             | Cons                                                                                                                             |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| Client-side retry with backoff on the confirm call | Catches the common case (transient network blip) with no server-side work                                                                                                                        | Doesn't help if the client crashes or closes before confirming at all — leaves the gap open                                      |
+| Do nothing                                         | No extra code                                                                                                                                                                                    | Silent, unbounded storage leak against a free-tier quota — unacceptable for a "final product" with no one watching it day to day |
+| **Periodic reconciliation job (chosen)**           | Closes the gap regardless of cause; piggybacks on the cron job that already runs hourly, so no new infrastructure; R2 list-objects calls are Class B operations, effectively free at this volume | One more thing the digest endpoint does each run; needs the 24h grace window to avoid racing an in-flight upload                 |
 
 ## Consequences
 
 - The hourly cron endpoint now does two jobs, not one — send the digest (if due) and reconcile orphaned objects (every run). Kept as one endpoint rather than two separate cron triggers, since both are cheap and hourly is already the cadence
 - Client-side retry-with-backoff on confirm is still worth having as a first line of defense — it just isn't sufficient on its own, so it's a complement to this job, not a replacement
-- Frontend Sentry (see the Runbook) helps diagnose *why* confirms fail when they do, which this job doesn't explain — the two are complementary: Sentry surfaces the cause, reconciliation cleans up the result
-- This job only ever deletes R2 objects with *no* matching `photos` row. A confirmed photo — including one whose digest delivery is still retrying under ADR-010 — always has a row, so it is never a candidate for deletion here, no matter how many hours a delivery retry has been pending
+- Frontend Sentry (see the Runbook) helps diagnose _why_ confirms fail when they do, which this job doesn't explain — the two are complementary: Sentry surfaces the cause, reconciliation cleans up the result
+- This job only ever deletes R2 objects with _no_ matching `photos` row. A confirmed photo — including one whose digest delivery is still retrying under ADR-010 — always has a row, so it is never a candidate for deletion here, no matter how many hours a delivery retry has been pending

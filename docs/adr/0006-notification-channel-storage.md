@@ -13,10 +13,10 @@ Create a dedicated `notification_preferences` table (`user_id`, `channel`, `chan
 
 ## Alternatives Considered
 
-| Option | Pros | Cons |
-|---|---|---|
-| `slack_user_id` column on users | Simplest possible implementation while only Slack is used | Locks the schema to Slack; adding email/WhatsApp later means a schema migration |
-| **notification_preferences table (chosen)** | Channel-agnostic from day one; a trainer can have multiple channels with one marked primary; no migration needed to add channels later | Slightly more setup while only one channel is used today |
+| Option                                      | Pros                                                                                                                                   | Cons                                                                            |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `slack_user_id` column on users             | Simplest possible implementation while only Slack is used                                                                              | Locks the schema to Slack; adding email/WhatsApp later means a schema migration |
+| **notification_preferences table (chosen)** | Channel-agnostic from day one; a trainer can have multiple channels with one marked primary; no migration needed to add channels later | Slightly more setup while only one channel is used today                        |
 
 ## Consequences
 

@@ -6,30 +6,30 @@ Deployment, operations, and "how do I..." reference.
 
 Six free accounts, all under the $0/month constraint (ADR-002):
 
-| Service | Used for |
-|---|---|
-| Vercel | Frontend (Vue static) + backend (NestJS serverless functions) |
-| Neon | PostgreSQL — metadata only, no photo bytes |
-| Cloudflare | R2 bucket — photo storage |
-| Slack | A Slack app with a bot token, installed in the workspace the trainer(s) use |
-| GitHub | Repo + Actions (hourly digest trigger, CI) |
-| Sentry | Error tracking (frontend + backend) + cron monitoring on the digest job |
+| Service    | Used for                                                                    |
+| ---------- | --------------------------------------------------------------------------- |
+| Vercel     | Frontend (Vue static) + backend (NestJS serverless functions)               |
+| Neon       | PostgreSQL — metadata only, no photo bytes                                  |
+| Cloudflare | R2 bucket — photo storage                                                   |
+| Slack      | A Slack app with a bot token, installed in the workspace the trainer(s) use |
+| GitHub     | Repo + Actions (hourly digest trigger, CI)                                  |
+| Sentry     | Error tracking (frontend + backend) + cron monitoring on the digest job     |
 
 ## 2. Environment Variables & Secrets
 
 Live in Vercel's environment variable store, scoped to Production (and separately to Preview/Development — see Local Development below). GitHub Actions secrets are separate, stored in the repo's Actions settings.
 
-| Variable | Where | Purpose |
-|---|---|---|
-| `DATABASE_URL` | Vercel | Neon Postgres connection string |
-| `R2_ACCOUNT_ID` | Vercel | Cloudflare account ID |
-| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | Vercel | R2 API credentials (S3-compatible), scoped to the bucket |
-| `R2_BUCKET_NAME` | Vercel | Which bucket to use |
-| `SLACK_BOT_TOKEN` | Vercel | Bot token for chat.postMessage + native file upload (ADR-008) |
-| `ADMIN_PASSWORD` | Vercel | Shared password gating `/admin/*` (ADR-004) |
-| `SENTRY_DSN_BACKEND` | Vercel | NestJS Sentry project |
-| `VITE_SENTRY_DSN_FRONTEND` | Vercel (build-time) | Vue Sentry project — DSNs are not secret by design, but still kept as an env var for easy rotation |
-| `DIGEST_ENDPOINT_URL` | GitHub Actions secret | The deployed `/cron/send-daily-digest` URL the hourly workflow calls |
+| Variable                                    | Where                 | Purpose                                                                                            |
+| ------------------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                              | Vercel                | Neon Postgres connection string                                                                    |
+| `R2_ACCOUNT_ID`                             | Vercel                | Cloudflare account ID                                                                              |
+| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | Vercel                | R2 API credentials (S3-compatible), scoped to the bucket                                           |
+| `R2_BUCKET_NAME`                            | Vercel                | Which bucket to use                                                                                |
+| `SLACK_BOT_TOKEN`                           | Vercel                | Bot token for chat.postMessage + native file upload (ADR-008)                                      |
+| `ADMIN_PASSWORD`                            | Vercel                | Shared password gating `/admin/*` (ADR-004)                                                        |
+| `SENTRY_DSN_BACKEND`                        | Vercel                | NestJS Sentry project                                                                              |
+| `VITE_SENTRY_DSN_FRONTEND`                  | Vercel (build-time)   | Vue Sentry project — DSNs are not secret by design, but still kept as an env var for easy rotation |
+| `DIGEST_ENDPOINT_URL`                       | GitHub Actions secret | The deployed `/cron/send-daily-digest` URL the hourly workflow calls                               |
 
 **Never commit these.** Use `.env.local` (gitignored) for local dev, matching the variable names above.
 
@@ -105,12 +105,12 @@ Sentry answers "did anything throw an error," "did the digest job run on schedul
 
 Nothing here auto-alerts on its own (unlike the digest, which has Sentry cron monitoring) — these are dashboards worth a periodic manual glance, especially in the first few months.
 
-| Service | Limit | Where to check |
-|---|---|---|
-| Neon | ~5GB storage | Neon console → project storage |
-| Cloudflare R2 | 10GB storage, 1M writes/mo, 10M reads/mo | Cloudflare dashboard → R2 → bucket metrics |
-| GitHub Actions | 2,000 min/mo (private repo) | Repo → Settings → Actions → Usage |
-| Sentry | 5,000 events/mo (shared FE + BE) | Sentry → Organization Settings → Usage |
+| Service        | Limit                                    | Where to check                             |
+| -------------- | ---------------------------------------- | ------------------------------------------ |
+| Neon           | ~5GB storage                             | Neon console → project storage             |
+| Cloudflare R2  | 10GB storage, 1M writes/mo, 10M reads/mo | Cloudflare dashboard → R2 → bucket metrics |
+| GitHub Actions | 2,000 min/mo (private repo)              | Repo → Settings → Actions → Usage          |
+| Sentry         | 5,000 events/mo (shared FE + BE)         | Sentry → Organization Settings → Usage     |
 
 At this app's actual volume (2-3 users), none of these are expected to be hit — see the System Design's cost breakdown for the underlying math. This table exists so a future surprise has an obvious first place to check.
 
@@ -174,7 +174,7 @@ WHERE meal_date >= CURRENT_DATE - INTERVAL '7 days'
 GROUP BY 1, 2;
 ```
 
-A meal older than 7 days that a client insists they uploaded photos for, but that never reached Slack, is expected behavior, not a bug — confirm the meal's date against the 7-day cutoff before treating it as a delivery failure. If a row for a recent meal is unexpectedly missing entirely (no `pending`, `sent`, or `failed_permanent` row at all), that means both `confirm-upload`'s enqueue *and* the reconciliation sweep missed it — worth a closer look, since that shouldn't happen given the sweep runs every hourly tick. A row that's `pending` with `digest_message_id IS NULL` is just waiting for the next window-open sweep to claim it into a message (ADR-013) — not stuck, unless that's still true well after the window should have opened.
+A meal older than 7 days that a client insists they uploaded photos for, but that never reached Slack, is expected behavior, not a bug — confirm the meal's date against the 7-day cutoff before treating it as a delivery failure. If a row for a recent meal is unexpectedly missing entirely (no `pending`, `sent`, or `failed_permanent` row at all), that means both `confirm-upload`'s enqueue _and_ the reconciliation sweep missed it — worth a closer look, since that shouldn't happen given the sweep runs every hourly tick. A row that's `pending` with `digest_message_id IS NULL` is just waiting for the next window-open sweep to claim it into a message (ADR-013) — not stuck, unless that's still true well after the window should have opened.
 
 ### Recover a permanently-failed digest delivery
 

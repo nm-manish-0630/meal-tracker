@@ -16,14 +16,14 @@ Cost target: $0/month, free tiers only. See `docs/SYSTEM_DESIGN.md` for the full
 
 ## Docs — read before you build
 
-| Doc | Read this when... |
-|---|---|
-| `docs/PRD.md` | You need to know what the product is supposed to do — features, user stories, non-functional requirements, explicit scope boundaries ("Out of Scope" is a real list, not a placeholder) |
-| `docs/SYSTEM_DESIGN.md` | You're implementing anything backend: full Postgres schema (all tables, current as of the latest ADR), every API endpoint, the daily digest job's pseudocode step-by-step, the photo enqueue logic. This is the single most detailed technical doc — start here for backend work |
-| `docs/ARCHITECTURE.md` | You need the big-picture data flow (upload flow, digest delivery flow) or which service talks to which over what protocol |
-| `docs/adr/README.md` | You're about to make a decision that might contradict a past one — check here first. Points into `docs/adr/0001-*.md` through `0015-*.md`, one file per decision, in dependency order |
-| `docs/RUNBOOK.md` | You're deploying, debugging a failed digest delivery, rotating a secret, or running a diagnostic SQL query against `digest_deliveries`/`digest_messages` |
-| `docs/design/UI_SPEC.md` | You're building a frontend screen — describes all 6 screens (layout, states, interactions, design tokens) in plain language. The original mockups used a templating syntax that isn't valid Vue; don't try to port markup from them, use this doc instead |
+| Doc                      | Read this when...                                                                                                                                                                                                                                                                |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/PRD.md`            | You need to know what the product is supposed to do — features, user stories, non-functional requirements, explicit scope boundaries ("Out of Scope" is a real list, not a placeholder)                                                                                          |
+| `docs/SYSTEM_DESIGN.md`  | You're implementing anything backend: full Postgres schema (all tables, current as of the latest ADR), every API endpoint, the daily digest job's pseudocode step-by-step, the photo enqueue logic. This is the single most detailed technical doc — start here for backend work |
+| `docs/ARCHITECTURE.md`   | You need the big-picture data flow (upload flow, digest delivery flow) or which service talks to which over what protocol                                                                                                                                                        |
+| `docs/adr/README.md`     | You're about to make a decision that might contradict a past one — check here first. Points into `docs/adr/0001-*.md` through `0015-*.md`, one file per decision, in dependency order                                                                                            |
+| `docs/RUNBOOK.md`        | You're deploying, debugging a failed digest delivery, rotating a secret, or running a diagnostic SQL query against `digest_deliveries`/`digest_messages`                                                                                                                         |
+| `docs/design/UI_SPEC.md` | You're building a frontend screen — describes all 6 screens (layout, states, interactions, design tokens) in plain language. The original mockups used a templating syntax that isn't valid Vue; don't try to port markup from them, use this doc instead                        |
 
 ## Things that are easy to get wrong if you skip the ADRs
 

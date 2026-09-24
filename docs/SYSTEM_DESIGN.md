@@ -47,17 +47,17 @@ Dashed = trigger / bypass relationships: GitHub Actions calls NestJS hourly, and
 
 ### Core Tables
 
-| Table | Columns |
-|---|---|
-| **users** | id, name, email, role: client\|trainer, trainer_group_id FK, is_active BOOLEAN default true |
-| **trainer_groups** | id, name, digest_timezone VARCHAR |
-| **notification_preferences** | id, user_id FK, channel: slack\|email, channel_identifier, is_primary |
-| **meals** | id, user_id FK, meal_type: breakfast\|lunch\|dinner\|snack, meal_date, created_at |
-| **photos** | id, meal_id FK, r2_object_key VARCHAR, file_size INT, upload_order 1-5, captured_at, uploaded_at |
-| **app_settings** | id, digest_time TIME, digest_time_timezone VARCHAR |
-| **digest_runs** | id, run_date DATE unique, status, window_opened_at, completed_at |
-| **digest_messages** | id, trainer_id FK, run_date DATE, status, slack_channel_id, slack_message_ts, attempt_count, attempt_log JSONB, unique on trainer_id+run_date |
-| **digest_deliveries** | id, digest_message_id FK, meal_id FK, meal_date DATE, trainer_id FK, status, photo_progress JSONB, attempt_count, attempt_log JSONB, unique on meal_id+trainer_id |
+| Table                        | Columns                                                                                                                                                           |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **users**                    | id, name, email, role: client\|trainer, trainer_group_id FK, is_active BOOLEAN default true                                                                       |
+| **trainer_groups**           | id, name, digest_timezone VARCHAR                                                                                                                                 |
+| **notification_preferences** | id, user_id FK, channel: slack\|email, channel_identifier, is_primary                                                                                             |
+| **meals**                    | id, user_id FK, meal_type: breakfast\|lunch\|dinner\|snack, meal_date, created_at                                                                                 |
+| **photos**                   | id, meal_id FK, r2_object_key VARCHAR, file_size INT, upload_order 1-5, captured_at, uploaded_at                                                                  |
+| **app_settings**             | id, digest_time TIME, digest_time_timezone VARCHAR                                                                                                                |
+| **digest_runs**              | id, run_date DATE unique, status, window_opened_at, completed_at                                                                                                  |
+| **digest_messages**          | id, trainer_id FK, run_date DATE, status, slack_channel_id, slack_message_ts, attempt_count, attempt_log JSONB, unique on trainer_id+run_date                     |
+| **digest_deliveries**        | id, digest_message_id FK, meal_id FK, meal_date DATE, trainer_id FK, status, photo_progress JSONB, attempt_count, attempt_log JSONB, unique on meal_id+trainer_id |
 
 `digest_runs` and `digest_deliveries` replace the old single `app_settings.last_sent_date` flag with a resumable, idempotent delivery queue — see ADR-010. Every delivery, whether for today's meal or a backdated one within 7 days, is created the moment a photo is confirmed (`POST /meals/confirm-upload`) rather than by a periodic scan — see ADR-012 (which replaced ADR-011's original scan mechanism, keeping its 7-day policy). `meal_date` is denormalized onto the row so "is this today's or a catch-up delivery" is a cheap comparison at drain time, not a stored, driftable label. `digest_messages` is new (ADR-013): one row per trainer per day, holding the single Slack message every one of that trainer's deliveries — same-day or catch-up — gets consolidated into and threaded under, via each delivery's `digest_message_id`.
 
@@ -161,11 +161,11 @@ No raw bytes ever touch Postgres or the NestJS function. Upload flow: client ask
 - **✓ Individual DMs:** Digest job sends one Slack DM per trainer (via their own primary notification_preference), not a shared channel.
 - **✓ Image resize, revised:** Now **client-side** (canvas API or a small library), before upload — not server-side Sharp as previously resolved. Once photos upload directly to R2, NestJS never receives the raw bytes to process, so server-side compression is no longer possible in this flow.
 - **✓ Delete strategy:** Soft delete (is_active=false) for user accounts, so historical meals/photos stay intact; hard delete for photos (and their R2 objects) once the 1-year retention window passes.
-- **✓ Late uploads, revised:** A backdated photo appears in the client/trainer dashboards immediately *and*, if the meal is dated within the last 7 days, is included in the trainer's next daily digest — either a new "remaining meal photos for `<date>`" line (if the meal never had a delivery) or new photos threaded under the meal's existing message (if it did, with no header resent). Older than 7 days stays dashboard-only. This supersedes the original "dashboard only, no Slack" behavior — see ADR-011. Delivery timing itself is revised again by ADR-013: catch-up no longer posts as soon as it's enqueued, it waits for the same daily window as everything else.
+- **✓ Late uploads, revised:** A backdated photo appears in the client/trainer dashboards immediately _and_, if the meal is dated within the last 7 days, is included in the trainer's next daily digest — either a new "remaining meal photos for `<date>`" line (if the meal never had a delivery) or new photos threaded under the meal's existing message (if it did, with no header resent). Older than 7 days stays dashboard-only. This supersedes the original "dashboard only, no Slack" behavior — see ADR-011. Delivery timing itself is revised again by ADR-013: catch-up no longer posts as soon as it's enqueued, it waits for the same daily window as everything else.
 - **✓ Orphaned R2 objects:** If a browser upload to R2 succeeds but the confirm call never arrives (crash, closed tab, dropped connection), the object has no database row and is otherwise invisible. Closed via a reconciliation step in the hourly cron — see below and ADR-009.
 - **✓ Digest delivery, revised:** No longer a presigned URL embedded in the Slack message — NestJS downloads the photo from R2 and uploads it natively into Slack during the digest job. Removes the 7-day URL expiry limitation entirely; digest history stays viewable indefinitely. See ADR-008.
 - **✓ Digest delivery reliability, new:** Sending is now an idempotent, resumable queue (`digest_deliveries`), not a one-shot loop. Each meal×trainer delivery retries up to **4 total attempts (1 initial + 3 retries)** across successive hourly ticks — never re-posting a message or re-uploading a photo that already succeeded — before being marked permanently failed and raised as a distinct Sentry alert. Every attempt, success or failure, is appended to `attempt_log` for retrospective debugging, independent of Sentry's own retention. See ADR-010.
-- **✓ 7-day catch-up window, revised:** A meal dated within the last 7 days gets delivered to Slack — a genuinely missed meal gets a fresh delivery, and a meal that already has a `sent` delivery but gained new photos gets those photos threaded under its existing message (no duplicate header, fresh 4-attempt budget just for the new photos). Meals older than 7 days, and meal-type edits/deletions at any age, remain dashboard-only. The policy is unchanged from ADR-011; *how* it's detected changed in ADR-012, and *when* it posts changed again in ADR-013 — see the next two entries.
+- **✓ 7-day catch-up window, revised:** A meal dated within the last 7 days gets delivered to Slack — a genuinely missed meal gets a fresh delivery, and a meal that already has a `sent` delivery but gained new photos gets those photos threaded under its existing message (no duplicate header, fresh 4-attempt budget just for the new photos). Meals older than 7 days, and meal-type edits/deletions at any age, remain dashboard-only. The policy is unchanged from ADR-011; _how_ it's detected changed in ADR-012, and _when_ it posts changed again in ADR-013 — see the next two entries.
 - **✓ Event-driven enqueue, new:** Rather than an hourly scan inferring what's new, `POST /meals/confirm-upload` enqueues the photo for delivery the instant it's confirmed — same-day and catch-up meals both go through this one path. A daily reconciliation sweep (same cadence as R2 cleanup, ADR-009) catches anything a failed enqueue might have missed. See ADR-012.
 - **✓ Single daily digest message, new:** A trainer gets exactly **one** Slack message per day, sent only once `digest_time` passes — not one message per meal, and not one whenever a catch-up photo happens to get confirmed. The message consolidates a "today" section plus one "remaining meal photos for `<date>`" section per distinct catch-up date, each grouped by meal type; every meal's photos then thread underneath that single message. Reopened meals (ADR-011) keep threading into whichever message originally claimed them, even from days ago — never into today's new one. See ADR-013.
 - **✓ Observability:** Sentry on both frontend and backend (free tier), plus Sentry Cron Monitoring on the digest endpoint — closes the PRD's "monitored + alerts" requirement that had no implementation until now. Grafana/Prometheus considered and deliberately deferred — a pull-based scraping model doesn't fit serverless functions well, and the questions it answers (latency trends, cross-service correlation) aren't the questions this app has at this scale.
@@ -251,7 +251,7 @@ Sentry cron check-in: start / success / fail
 
 **Note on thread-homes (ADR-013):** `digest_message_id` is set once, at Step 0.5, and never changes after that. A meal that reopens (ADR-011 — already `sent`, gains a new photo) keeps its existing `digest_message_id`; it re-enters Step 1's drain directly without ever passing back through Step 0.5, since it was never unclaimed. Only meals with no delivery history at all get grouped into whichever header Step 0.5 is currently composing.
 
-Delivery rows are never generated here — that happens once, at upload-confirm time, for both same-day and catch-up meals alike (ADR-012). This job only ever consolidates and drains what's already eligible, and every delivery now waits for the *same* gate: `digest_time` passing (Step 0), then being claimed into that trainer's one daily message (Step 0.5) before its photos can thread (Step 1). Catch-up no longer skips ahead of that — see ADR-013. Every retry skips whatever already succeeded — same header, same photo never sent twice — until each delivery drains or exhausts its 4-attempt budget. See ADR-010 for the core idempotency/failure-logging design.
+Delivery rows are never generated here — that happens once, at upload-confirm time, for both same-day and catch-up meals alike (ADR-012). This job only ever consolidates and drains what's already eligible, and every delivery now waits for the _same_ gate: `digest_time` passing (Step 0), then being claimed into that trainer's one daily message (Step 0.5) before its photos can thread (Step 1). Catch-up no longer skips ahead of that — see ADR-013. Every retry skips whatever already succeeded — same header, same photo never sent twice — until each delivery drains or exhausts its 4-attempt budget. See ADR-010 for the core idempotency/failure-logging design.
 
 ### R2 Reconciliation Job
 
@@ -374,6 +374,7 @@ No expiry, ever — once uploaded, Slack owns the image permanently. Digest hist
 ## Build Roadmap (~4-6 weeks)
 
 ### Phase 1: Backend Core
+
 - Neon PostgreSQL setup
 - NestJS project + Vercel deploy
 - Cloudflare R2 bucket + CORS setup
@@ -381,6 +382,7 @@ No expiry, ever — once uploaded, Slack owns the image permanently. Digest hist
 - EXIF extraction (piexifjs)
 
 ### Phase 2: Trainer Digest
+
 - Vue upload form
 - Meal type auto-detect UI
 - POST /cron/send-daily-digest
@@ -392,18 +394,21 @@ No expiry, ever — once uploaded, Slack owns the image permanently. Digest hist
 - R2 reconciliation job (ADR-009)
 
 ### Phase 3: Client Dashboard
+
 - Meal history view
 - Edit meal type
 - Delete photo/meal
 - Add photo to past meal
 
 ### Phase 4: Admin Dashboard
+
 - CRUD: users, trainer groups
 - Client-group assignment
 - Digest time/timezone config
 - Shared-password protection
 
 ### Phase 5: Polish, Observability & Deploy
+
 - Error handling & logging
 - Client-side compression before upload
 - Sentry: frontend + backend + cron monitoring + failed-delivery alerts

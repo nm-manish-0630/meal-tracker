@@ -10,17 +10,17 @@ Plain-language description of the 6 mockup screens, extracted from the Cowork De
 
 **Color tokens** (CSS custom properties in the mockups — same names work as a starting point for a Tailwind config or CSS variables file):
 
-| Token | Light | Dark |
-|---|---|---|
-| `--bg` | `#F4F9F8` | `#0F1715` |
-| `--surface` | `#FFFFFF` | `#182420` |
-| `--surface-2` | `#E1EDEA` | `#223129` |
-| `--text` | `#142420` | `#EAF3F0` |
-| `--text-secondary` | `#56685F` | `#9FB3AC` |
-| `--border` | `#DCE8E5` | `#29372F` |
-| `--accent` (teal) | `#0E7C74` | same |
-| `--accent-2` (terracotta) | `#C1652F` | same |
-| `--warn` (amber, Trainer Dashboard only) | `#D9A441` | same |
+| Token                                    | Light     | Dark      |
+| ---------------------------------------- | --------- | --------- |
+| `--bg`                                   | `#F4F9F8` | `#0F1715` |
+| `--surface`                              | `#FFFFFF` | `#182420` |
+| `--surface-2`                            | `#E1EDEA` | `#223129` |
+| `--text`                                 | `#142420` | `#EAF3F0` |
+| `--text-secondary`                       | `#56685F` | `#9FB3AC` |
+| `--border`                               | `#DCE8E5` | `#29372F` |
+| `--accent` (teal)                        | `#0E7C74` | same      |
+| `--accent-2` (terracotta)                | `#C1652F` | same      |
+| `--warn` (amber, Trainer Dashboard only) | `#D9A441` | same      |
 
 Every screen has a light/dark toggle in its header — a small two-button segmented control (Light / Dark, each with a sun/moon icon), top-right. Selecting one swaps every token above app-wide for that screen.
 

@@ -13,11 +13,11 @@ Host frontend + backend on `Vercel` (free tier) and database on `Neon PostgreSQL
 
 ## Alternatives Considered
 
-| Option | Pros | Cons |
-|---|---|---|
-| **Vercel + Neon (chosen)** | $0/month; zero server management; auto-deploys from Git | Serverless functions can't run persistent background processes (affects cron — see ADR-003) |
-| VPS (DigitalOcean/Hetzner) + Neon | Full control; persistent process supports internal cron natively | $5-10/month; manual server maintenance, OS updates, security patches |
-| Replit + Neon | 2 components instead of 3; built-in persistent process | Free tier is resource-limited and can sleep when inactive, risking missed cron runs |
+| Option                            | Pros                                                             | Cons                                                                                        |
+| --------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| **Vercel + Neon (chosen)**        | $0/month; zero server management; auto-deploys from Git          | Serverless functions can't run persistent background processes (affects cron — see ADR-003) |
+| VPS (DigitalOcean/Hetzner) + Neon | Full control; persistent process supports internal cron natively | $5-10/month; manual server maintenance, OS updates, security patches                        |
+| Replit + Neon                     | 2 components instead of 3; built-in persistent process           | Free tier is resource-limited and can sleep when inactive, risking missed cron runs         |
 
 ## Consequences
 

@@ -1,26 +1,19 @@
-# With-NestJs | API
+# Meal Tracker API
 
-## Getting Started
+NestJS backend for Meal Tracker. See the repo root's `CLAUDE.md` and `docs/` for product context, schema, and API design — this README only covers running the app.
 
-First, run the development server:
+## Commands
 
 ```bash
-pnpm run dev
-# Also works with NPM, YARN, BUN, ...
+pnpm dev          # swc watch build + node --watch dist/main.js
+pnpm build        # swc build to dist/
+pnpm start        # run the built dist/main.js
+pnpm test         # unit tests (vitest)
+pnpm test:e2e     # e2e tests (vitest)
+pnpm lint         # eslint
+pnpm check-types  # tsc --noEmit
 ```
 
-By default, your server will run at [localhost:3000](http://localhost:3000). You can use your favorite API platform like [Insomnia](https://insomnia.rest/) or [Postman](https://www.postman.com/) to test your APIs
+By default, the server runs at [localhost:3000](http://localhost:3000).
 
-You can start editing the demo **APIs** by modifying [linksService](./src/links/links.service.ts) provider.
-
-### Important Note 🚧
-
-If you plan to `build` or `test` the app. Please make sure to build the `packages/*` first.
-
-## Learn More
-
-Learn more about `NestJs` with following resources:
-
-- [Official Documentation](https://docs.nestjs.com) - A progressive Node.js framework for building efficient, reliable and scalable server-side applications.
-- [Official NestJS Courses](https://courses.nestjs.com) - Learn everything you need to master NestJS and tackle modern backend applications at any scale.
-- [GitHub Repo](https://github.com/nestjs/nest)
+**Building or testing this app requires `packages/*` to be built first** (e.g. `@repo/api`) — `pnpm build`/`pnpm test` from the repo root handle this automatically via Turborepo's task graph.

@@ -10,10 +10,10 @@ A lightweight app that enables fitness coaches to receive daily photo digests of
 
 **Who this is for:** Fitness coaches & clients with 1:1 coaching relationships. This is the complete, final scope — not a first version of something larger.
 
-| User Type | Goal | Pain Point |
-|---|---|---|
-| **Client** | Share meal photos with coach | Manual photo texting/emailing is tedious |
-| **Trainer** | Review client meals daily | Photos scattered across messages, hard to batch review |
+| User Type       | Goal                                 | Pain Point                                                     |
+| --------------- | ------------------------------------ | -------------------------------------------------------------- |
+| **Client**      | Share meal photos with coach         | Manual photo texting/emailing is tedious                       |
+| **Trainer**     | Review client meals daily            | Photos scattered across messages, hard to batch review         |
 | **Admin (You)** | Manage clients, trainers, and groups | Otherwise requires direct database edits for any roster change |
 
 Two people fill these three roles today: Manish is both the Client and the Admin; the trainer is a separate person.
@@ -57,7 +57,7 @@ Two people fill these three roles today: Manish is both the Client and the Admin
 - **View history, on its own screen:** a dedicated screen listing every day the client has ever logged meals, most recent first — separate from the Client Dashboard's short recent-activity preview (today's status plus the last few days). This screen is a browsable index; selecting a day opens the per-day page below
 - **Per-day shareable link:** Same route and anchor pattern as the trainer's per-day view (Feature 3a) — the client's own day is just as linkable and jumpable-to
 - **Add, Edit, Delete — on the per-day page, not the history list:** upload more photos to a past meal (5-photo max), change a meal's type, or remove a photo/meal, all from the per-day page itself (Feature 3a). That page is shared, unmodified, with the trainer's view (ADR-014), so these controls aren't restricted to the client who owns the meals — anyone holding that day's link has them too. An accepted trade-off, not an oversight — see ADR-015
-- **No duplicate resend, narrowed:** A meal-type edit or a deletion never triggers any Slack action — the trainer's dashboard view (Feature 3) is the only place those show up. A *new photo* added to a meal already covered by a sent digest is the one exception: if the meal is within the 7-day catch-up window (Feature 2), the new photo is threaded under that meal's existing Slack message — the original header is never resent
+- **No duplicate resend, narrowed:** A meal-type edit or a deletion never triggers any Slack action — the trainer's dashboard view (Feature 3) is the only place those show up. A _new photo_ added to a meal already covered by a sent digest is the one exception: if the meal is within the 7-day catch-up window (Feature 2), the new photo is threaded under that meal's existing Slack message — the original header is never resent
 
 ### 5. Admin Dashboard (CRUD)
 
@@ -69,18 +69,21 @@ Two people fill these three roles today: Manish is both the Client and the Admin
 ## User Stories
 
 **US-1 (Client):** As a client, I want to upload a photo of my breakfast so that my coach can see what I ate.
+
 - Can take new photo or select from camera roll
 - Photo auto-tagged as "Breakfast" if taken 5-10am
 - Can override meal type if incorrect
 - Upload succeeds with visual confirmation
 
 **US-2 (Trainer):** As a trainer, I want to receive all my client's meals in one daily Slack message so I can review them quickly.
+
 - Message arrives at the configured time (same moment for every trainer group)
 - Meals grouped by type (Breakfast, Lunch, Dinner, Snack)
 - All photos visible inline
 - Can forward/save Slack message for records
 
 **US-3 (Client):** As a client, I want to upload yesterday's (or up to 7 days ago's) meal today and have my trainer actually see it, not just have it sit in a dashboard nobody checks.
+
 - Photo EXIF timestamp read automatically
 - Photo grouped into correct day+meal
 - Trainer sees it in their next daily digest message (sent once, at the configured digest time) within 7 days of the meal's date — a "remaining meal photos for `<date>`" line if that meal was missed entirely, or the photo threaded under the meal's existing message if part of it already sent. Not a separate Slack message of its own
@@ -88,11 +91,13 @@ Two people fill these three roles today: Manish is both the Client and the Admin
 - Trainer can also view in dashboard for historical records, including anything older than 7 days
 
 **US-4 (Trainer):** As a trainer with 3 clients, I want one Slack message per client daily.
+
 - Separate message for each client (not mixed)
 - Client name in message header
 - All arrive within 5 minutes of the configured send time
 
 **US-5 (Client):** As a client, I want to view and manage my past meal photos so I can review my history and fix mistakes.
+
 - Can browse all past meals grouped by date
 - Can edit a meal's type or delete a photo/meal
 - A meal-type edit or a deletion never changes or resends anything already sent to Slack — those only ever update the dashboard
@@ -100,6 +105,7 @@ Two people fill these three roles today: Manish is both the Client and the Admin
 - Changes are reflected next time the trainer opens their dashboard
 
 **US-6 (Admin):** As the app owner, I want to create/edit/remove clients and trainers without touching the database directly.
+
 - Can create a new client or trainer account
 - Can assign/reassign a client to a trainer group
 - Can set the one shared digest send time, and each trainer group's own timezone
@@ -155,24 +161,24 @@ This list reflects the complete, final scope of the product — not a backlog fo
 
 ## Success Metrics
 
-| Metric | Target | Why It Matters |
-|---|---|---|
-| **Upload success rate** | >95% | Photos reliably reach trainer |
-| **Daily digest send reliability** | 100% (no missed days) | Trainer depends on the daily digest arriving |
-| **EXIF auto-detect accuracy** | >90% | Meals grouped into correct type |
-| **Avg photo upload time** | <5 seconds | Good UX, clients don't abandon |
-| **Database size** | <50MB (1 year data) | Photos live in R2, not Postgres (ADR-007) — Neon only holds metadata + delivery/attempt records, so this is a trivial target, not a real constraint |
-| **Edit/delete success rate** | >99% | Clients trust their history is accurate |
+| Metric                            | Target                | Why It Matters                                                                                                                                      |
+| --------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Upload success rate**           | >95%                  | Photos reliably reach trainer                                                                                                                       |
+| **Daily digest send reliability** | 100% (no missed days) | Trainer depends on the daily digest arriving                                                                                                        |
+| **EXIF auto-detect accuracy**     | >90%                  | Meals grouped into correct type                                                                                                                     |
+| **Avg photo upload time**         | <5 seconds            | Good UX, clients don't abandon                                                                                                                      |
+| **Database size**                 | <50MB (1 year data)   | Photos live in R2, not Postgres (ADR-007) — Neon only holds metadata + delivery/attempt records, so this is a trivial target, not a real constraint |
+| **Edit/delete success rate**      | >99%                  | Clients trust their history is accurate                                                                                                             |
 
 ## Timeline
 
-| Phase | Duration | Deliverables |
-|---|---|---|
-| **Phase 1: Backend Core** | 1-2 weeks | NestJS + Neon + R2 setup, presigned upload flow (50MB limit), EXIF extraction |
-| **Phase 2: Trainer Digest** | 1 week | Vue 3 upload UI, Slack API, daily digest job, GitHub Actions cron, configurable digest time |
-| **Phase 3: Client Dashboard** | 3-5 days | Meal history view, edit meal type, delete photo/meal |
-| **Phase 4: Admin Dashboard** | 3-5 days | CRUD on clients/trainers/trainer groups, digest settings, basic access protection |
-| **Phase 5: Polish** | 1 week | Error handling, client-side image compression, testing, deployment |
-| **🚀 Launch** | — | Live product with 2 users (Manish + trainer) |
+| Phase                         | Duration  | Deliverables                                                                                |
+| ----------------------------- | --------- | ------------------------------------------------------------------------------------------- |
+| **Phase 1: Backend Core**     | 1-2 weeks | NestJS + Neon + R2 setup, presigned upload flow (50MB limit), EXIF extraction               |
+| **Phase 2: Trainer Digest**   | 1 week    | Vue 3 upload UI, Slack API, daily digest job, GitHub Actions cron, configurable digest time |
+| **Phase 3: Client Dashboard** | 3-5 days  | Meal history view, edit meal type, delete photo/meal                                        |
+| **Phase 4: Admin Dashboard**  | 3-5 days  | CRUD on clients/trainers/trainer groups, digest settings, basic access protection           |
+| **Phase 5: Polish**           | 1 week    | Error handling, client-side image compression, testing, deployment                          |
+| **🚀 Launch**                 | —         | Live product with 2 users (Manish + trainer)                                                |
 
 Updated from the original 3-4 weeks to ~4-6 weeks to reflect the added Client and Admin dashboards.

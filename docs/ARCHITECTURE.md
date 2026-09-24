@@ -26,15 +26,15 @@ Not shown as a separate arrow to keep this diagram readable: NestJS also talks t
 
 **Legend:**
 
-| Color | Component type |
-|---|---|
-| Light blue | Client/User Device |
-| Black | Vercel CDN |
-| Sky blue | Vercel Serverless |
-| Green | Database |
-| Purple | Scheduler |
-| Pink | External API |
-| Orange | Object Storage (R2) |
+| Color      | Component type      |
+| ---------- | ------------------- |
+| Light blue | Client/User Device  |
+| Black      | Vercel CDN          |
+| Sky blue   | Vercel Serverless   |
+| Green      | Database            |
+| Purple     | Scheduler           |
+| Pink       | External API        |
+| Orange     | Object Storage (R2) |
 
 ## Upload Data Flow
 
@@ -78,8 +78,8 @@ flowchart LR
 >
 > ↳ All 32 photos above thread under this ONE header — no separate message per meal, no message before digest_time
 >
-> *A meal that already had a delivery and gains a new photo later still threads into its own original message, not this one*
-> *Tomorrow's window claims anything uploaded after this message posted — never squeezed into today's*
+> _A meal that already had a delivery and gains a new photo later still threads into its own original message, not this one_
+> _Tomorrow's window claims anything uploaded after this message posted — never squeezed into today's_
 
 Each row in `digest_deliveries` is still its own unit of work (per meal, per trainer) — no single global "sent" flag. A row is eligible same-day when `meal_date = CURRENT_DATE`, or as catch-up when `meal_date` is within the last 7 days (ADR-011) — both now wait for the same `digest_time` gate (ADR-013). What's new is the layer above it: `digest_messages` holds exactly one row per trainer per day, and every meal claimed into it shares that one `slack_message_ts` instead of each meal getting its own. Delivery is idempotent (`UNIQUE(meal_id, trainer_id)`, thread-reuse via the shared `slack_message_ts`) and retried up to 4 total attempts across successive hourly ticks, with every attempt appended to a durable `attempt_log` for retrospecting on failures (ADR-010).
 
@@ -109,12 +109,12 @@ This is the final product rather than a first version, so the structure below is
 
 ## Component Communication Protocols
 
-| From | To | Protocol | Auth |
-|---|---|---|---|
-| Vue (Browser) | NestJS API | REST + JSON (small payloads only) | None (client_id in request) |
-| Vue (Browser) | Cloudflare R2 | HTTPS PUT (direct upload) | Presigned URL (short expiry) |
-| NestJS API | Cloudflare R2 | S3-compatible API (presigned URL generation for uploads + GET to download photo bytes, relayed to Slack) | R2 API token |
-| NestJS API | Neon PostgreSQL | TCP (pg driver) | Connection string |
-| GitHub Actions | NestJS API | HTTPS POST | None (public endpoint) |
-| NestJS API | Slack API | HTTPS JSON | Bot token |
-| Vue (Admin Dashboard) | NestJS API (/admin/*) | REST + JSON | Shared password |
+| From                  | To                    | Protocol                                                                                                 | Auth                         |
+| --------------------- | --------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| Vue (Browser)         | NestJS API            | REST + JSON (small payloads only)                                                                        | None (client_id in request)  |
+| Vue (Browser)         | Cloudflare R2         | HTTPS PUT (direct upload)                                                                                | Presigned URL (short expiry) |
+| NestJS API            | Cloudflare R2         | S3-compatible API (presigned URL generation for uploads + GET to download photo bytes, relayed to Slack) | R2 API token                 |
+| NestJS API            | Neon PostgreSQL       | TCP (pg driver)                                                                                          | Connection string            |
+| GitHub Actions        | NestJS API            | HTTPS POST                                                                                               | None (public endpoint)       |
+| NestJS API            | Slack API             | HTTPS JSON                                                                                               | Bot token                    |
+| Vue (Admin Dashboard) | NestJS API (/admin/*) | REST + JSON                                                                                              | Shared password              |

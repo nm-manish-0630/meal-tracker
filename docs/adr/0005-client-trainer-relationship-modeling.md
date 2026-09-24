@@ -13,10 +13,10 @@ Use a direct `trainer_group_id` column on `users` instead of a separate `client_
 
 ## Alternatives Considered
 
-| Option | Pros | Cons |
-|---|---|---|
+| Option                                               | Pros                                                                                                                                                          | Cons                                                                          |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | **Direct FK on users (`trainer_group_id`) (chosen)** | Simpler schema, one less table; consistent with how trainers already link to a group; assignment is just a field update via the existing admin/users endpoint | No history — can't tell when a client switched trainer groups; no audit trail |
-| Junction table (`client_groups`) | Full history of assignments over time via `assigned_at`/`ended_at`; supports a client changing trainer groups cleanly | One extra table and join in queries, for a history feature that isn't needed |
+| Junction table (`client_groups`)                     | Full history of assignments over time via `assigned_at`/`ended_at`; supports a client changing trainer groups cleanly                                         | One extra table and join in queries, for a history feature that isn't needed  |
 
 ## Consequences
 

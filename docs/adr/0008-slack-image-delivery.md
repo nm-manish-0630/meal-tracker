@@ -13,11 +13,11 @@ Stop embedding a URL. Instead, during the digest job, NestJS downloads each phot
 
 ## Alternatives Considered
 
-| Option | Pros | Cons |
-|---|---|---|
-| Keep presigned URL, accept the 7-day limit | Zero additional work; already built | Digests older than a week silently show broken images — a real, if low-likelihood, correctness bug |
-| Publicly addressable R2 bucket (unguessable keys, no expiry) | No expiry problem; still just a URL, simple to implement | Trades away the presigned URL's access control for convenience; still one more public surface to reason about |
-| **Native Slack file upload (chosen)** | No expiry, ever — the image is Slack's problem once uploaded; no public bucket needed; digest history stays fully viewable indefinitely | 3 Slack API calls per photo instead of embedding 1 URL; digest job does more work (download from R2, then upload) and takes longer to run |
+| Option                                                       | Pros                                                                                                                                    | Cons                                                                                                                                      |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Keep presigned URL, accept the 7-day limit                   | Zero additional work; already built                                                                                                     | Digests older than a week silently show broken images — a real, if low-likelihood, correctness bug                                        |
+| Publicly addressable R2 bucket (unguessable keys, no expiry) | No expiry problem; still just a URL, simple to implement                                                                                | Trades away the presigned URL's access control for convenience; still one more public surface to reason about                             |
+| **Native Slack file upload (chosen)**                        | No expiry, ever — the image is Slack's problem once uploaded; no public bucket needed; digest history stays fully viewable indefinitely | 3 Slack API calls per photo instead of embedding 1 URL; digest job does more work (download from R2, then upload) and takes longer to run |
 
 ## Consequences
 

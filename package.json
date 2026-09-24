@@ -1,5 +1,5 @@
 {
-  "name": "my-turborepo",
+  "name": "meal-tracker",
   "version": "0.0.0",
   "private": true,
   "description": "",
@@ -12,7 +12,7 @@
     "test:e2e": "turbo run test:e2e",
     "lint": "turbo run lint",
     "check-types": "turbo run check-types",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,vue,md}\""
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

@@ -13,11 +13,11 @@ No login for client or trainer flows — `client_id` is passed directly as a for
 
 ## Alternatives Considered
 
-| Option | Pros | Cons |
-|---|---|---|
+| Option                                                              | Pros                                                             | Cons                                                                                                               |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | **No login for client/trainer, shared password for admin (chosen)** | Fastest to build; matches the actual trust level of each surface | Client/trainer endpoints aren't secure for public/multi-tenant use; anyone with the URL could impersonate a client |
-| Hardcoded JWT everywhere | Basic protection without full OAuth complexity | Extra implementation time not justified for a fixed, trusted, 2-user product |
-| Full OAuth | Production-grade, ready for multi-tenant growth | Significant overhead for a product with no multi-tenant plans; premature for the actual scope |
+| Hardcoded JWT everywhere                                            | Basic protection without full OAuth complexity                   | Extra implementation time not justified for a fixed, trusted, 2-user product                                       |
+| Full OAuth                                                          | Production-grade, ready for multi-tenant growth                  | Significant overhead for a product with no multi-tenant plans; premature for the actual scope                      |
 
 ## Consequences
 

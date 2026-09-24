@@ -13,10 +13,10 @@ Store photos as `BYTEA` directly in the Neon PostgreSQL `photos` table, rather t
 
 ## Alternatives Considered
 
-| Option | Pros | Cons |
-|---|---|---|
-| **PostgreSQL BYTEA (chosen)** | Single system to manage; free on Neon's tier; simpler backups (one DB, not two systems) | DB grows larger; not ideal at high photo volume |
-| AWS S3 | Purpose-built for file storage; scales indefinitely; offloads DB size | Extra service to configure/monitor; extra cost at scale; two systems to keep in sync |
+| Option                        | Pros                                                                                    | Cons                                                                                 |
+| ----------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| **PostgreSQL BYTEA (chosen)** | Single system to manage; free on Neon's tier; simpler backups (one DB, not two systems) | DB grows larger; not ideal at high photo volume                                      |
+| AWS S3                        | Purpose-built for file storage; scales indefinitely; offloads DB size                   | Extra service to configure/monitor; extra cost at scale; two systems to keep in sync |
 
 ## Consequences
 
