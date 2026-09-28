@@ -33,6 +33,9 @@ out/
 build
 dist
 
+# Prisma
+**/src/generated/
+
 # IDEs and editors
 /.idea
 .project
