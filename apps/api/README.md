@@ -9,7 +9,6 @@ pnpm dev          # swc watch build + node --watch dist/main.js
 pnpm build        # swc build to dist/
 pnpm start        # run the built dist/main.js
 pnpm test         # unit tests (vitest)
-pnpm test:e2e     # e2e tests (vitest)
 pnpm lint         # eslint
 pnpm check-types  # tsc --noEmit
 ```

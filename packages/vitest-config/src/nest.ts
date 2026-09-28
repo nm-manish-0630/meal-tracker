@@ -30,13 +30,3 @@ export const nestConfig = defineConfig({
     include: ['**/*.spec.ts'],
   },
 });
-
-export const nestE2eConfig = defineConfig({
-  plugins: [swcPlugin],
-  test: {
-    ...baseTestConfig,
-    root: './test',
-    environment: 'node',
-    include: ['**/*.e2e-spec.ts'],
-  },
-});

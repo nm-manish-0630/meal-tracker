@@ -46,20 +46,21 @@ Live in Vercel's environment variable store, scoped to Production (and separatel
 
 The schema has changed repeatedly over the course of design (dropped `client_groups`, added `trainer_group_id`, added `app_settings`, changed `photos` from BYTEA to `r2_object_key`, dropped `app_settings.last_sent_date` and added `digest_runs`/`digest_deliveries` in its place, then dropped `digest_deliveries.digest_run_id` and `delivery_kind` again in favor of a denormalized `meal_date` once delivery generation moved to upload-time enqueue, then added `digest_messages` and moved `slack_message_ts`/`slack_channel_id` up onto it once delivery consolidated into one message per trainer per day...). Hand-running SQL against Neon directly works until a change is forgotten or applied out of order. Use a real migration tool from the start:
 
-**Recommendation:** TypeORM migrations (pairs naturally with NestJS). Prisma Migrate is a fine alternative if the team ends up preferring Prisma's query layer — pick one, not both.
+**Decision:** Prisma (schema in `apps/api/prisma/schema.prisma`, connection config in `apps/api/prisma.config.ts`, migrations via `prisma migrate dev`). The original recommendation was TypeORM with Prisma as an alternative — Prisma was the one actually adopted.
 
 - Every schema change is a migration file, committed to the repo — the schema's history lives in git, not in memory
 - Migrations run as a deploy step (or manually via CLI before a deploy) — never hand-edited directly in Neon's SQL console for anything beyond one-off debugging
 - Local dev runs migrations against the dev branch (see below) before testing
+- Prisma 7 connects via a driver adapter (`@prisma/adapter-pg` for Postgres) rather than a schema-level `datasource.url` — see `apps/api/src/prisma/prisma.service.ts` for the actual construction
 
 ## 5. Local Development
 
 Never point local development at the real Neon database, real R2 bucket, or the real Slack workspace — a bug during testing shouldn't be able to page the actual trainer.
 
-- **Database:** Neon supports instant branching — create a `dev` branch off `main`, get its own connection string, use that locally
+- **Database:** `docker compose up -d` (root `docker-compose.yml`) runs a local Postgres for day-to-day dev — no external account needed to start building. Switch `DATABASE_URL` to a Neon dev branch (instant branching, its own connection string) before deploying, or sooner if you want dev data to persist across machines
 - **Photo storage:** a separate R2 bucket (e.g. `food-tracker-dev`), or at minimum a distinct key prefix in the same bucket
 - **Slack:** a personal test workspace with its own Slack app + bot token — never the real trainer's workspace
-- All of the above go in `.env.local`, gitignored, mirroring the variable names in the Vercel env var table
+- All of the above go in `.env.local` (see `.env.example` at the repo root for every variable), gitignored, mirroring the variable names in the Vercel env var table
 
 ## 6. Deploy Flow
 

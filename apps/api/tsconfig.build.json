@@ -7,8 +7,7 @@
     "**/*spec.ts",
     ".prettierrc.mjs",
     "eslint.config.mjs",
-    "vitest.config.mts",
-    "vitest.e2e.config.mts"
+    "vitest.config.mts"
   ],
   "compilerOptions": {
     "strictNullChecks": true
