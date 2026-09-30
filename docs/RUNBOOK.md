@@ -52,6 +52,7 @@ The schema has changed repeatedly over the course of design (dropped `client_gro
 - Migrations run as a deploy step (or manually via CLI before a deploy) — never hand-edited directly in Neon's SQL console for anything beyond one-off debugging
 - Local dev runs migrations against the dev branch (see below) before testing
 - Prisma 7 connects via a driver adapter (`@prisma/adapter-pg` for Postgres) rather than a schema-level `datasource.url` — see `apps/api/src/prisma/prisma.service.ts` for the actual construction
+- **Known quirk (Prisma 7.10.0):** `prisma migrate dev`'s own auto-generate step has been observed producing a generated client with an empty `runtimeDataModel` (model delegates like `prisma.user` come back `undefined`) even though the migration SQL itself was correct. `pnpm db:migrate` now always chains an explicit `db:generate` afterward specifically to guard against this — don't run `prisma migrate dev` directly without a follow-up `prisma generate` until this is confirmed fixed upstream
 
 ## 5. Local Development
 

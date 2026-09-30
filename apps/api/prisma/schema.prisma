@@ -6,3 +6,45 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model User {
+  id       String   @id @default(uuid()) @db.Uuid
+  name     String
+  email    String   @unique
+  role     String
+  isActive Boolean  @default(true) @map("is_active")
+
+  meals Meal[]
+
+  @@map("users")
+}
+
+model Meal {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  mealType  String   @map("meal_type")
+  mealDate  DateTime @map("meal_date") @db.Date
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user   User    @relation(fields: [userId], references: [id])
+  photos Photo[]
+
+  @@unique([userId, mealType, mealDate])
+  @@map("meals")
+}
+
+model Photo {
+  id          String    @id @default(uuid()) @db.Uuid
+  mealId      String    @map("meal_id") @db.Uuid
+  r2ObjectKey String    @map("r2_object_key")
+  fileSize    Int       @map("file_size")
+  uploadOrder Int       @map("upload_order")
+  capturedAt  DateTime? @map("captured_at")
+  uploadedAt  DateTime? @map("uploaded_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  meal Meal @relation(fields: [mealId], references: [id])
+
+  @@index([mealId])
+  @@map("photos")
+}
