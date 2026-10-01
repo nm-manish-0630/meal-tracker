@@ -1,7 +1,7 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
-  "globalDependencies": ["**/.env.*local"],
-  "globalEnv": ["DATABASE_URL"],
+  "globalDependencies": ["**/.env"],
+  "globalEnv": ["DATABASE_URL", "R2_ACCOUNT_ID", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY", "R2_BUCKET_NAME"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
