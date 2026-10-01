@@ -45,6 +45,6 @@ model Photo {
 
   meal Meal @relation(fields: [mealId], references: [id])
 
-  @@index([mealId])
+  @@unique([mealId, uploadOrder])
   @@map("photos")
 }

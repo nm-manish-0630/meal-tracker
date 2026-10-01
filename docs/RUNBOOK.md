@@ -31,7 +31,7 @@ Live in Vercel's environment variable store, scoped to Production (and separatel
 | `VITE_SENTRY_DSN_FRONTEND`                  | Vercel (build-time)   | Vue Sentry project — DSNs are not secret by design, but still kept as an env var for easy rotation |
 | `DIGEST_ENDPOINT_URL`                       | GitHub Actions secret | The deployed `/cron/send-daily-digest` URL the hourly workflow calls                               |
 
-**Never commit these.** Use `.env.local` (gitignored) for local dev, matching the variable names above.
+**Never commit these.** Use `.env` (gitignored) for local dev, matching the variable names above.
 
 ## 3. Initial Setup
 
@@ -61,7 +61,7 @@ Never point local development at the real Neon database, real R2 bucket, or the 
 - **Database:** `docker compose up -d` (root `docker-compose.yml`) runs a local Postgres for day-to-day dev — no external account needed to start building. Switch `DATABASE_URL` to a Neon dev branch (instant branching, its own connection string) before deploying, or sooner if you want dev data to persist across machines
 - **Photo storage:** a separate R2 bucket (e.g. `food-tracker-dev`), or at minimum a distinct key prefix in the same bucket
 - **Slack:** a personal test workspace with its own Slack app + bot token — never the real trainer's workspace
-- All of the above go in `.env.local` (see `.env.example` at the repo root for every variable), gitignored, mirroring the variable names in the Vercel env var table
+- All of the above go in `.env` (see `.env.example` at the repo root for every variable), gitignored, mirroring the variable names in the Vercel env var table
 
 ## 6. Deploy Flow
 
