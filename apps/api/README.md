@@ -15,4 +15,4 @@ pnpm check-types  # tsc --noEmit
 
 By default, the server runs at [localhost:3000](http://localhost:3000).
 
-**Building or testing this app requires `packages/*` to be built first** (e.g. `@repo/api`) — `pnpm build`/`pnpm test` from the repo root handle this automatically via Turborepo's task graph.
+**Building or testing this app requires `packages/*` to be built first** (e.g. `@repo/shared`) — `pnpm build`/`pnpm test` from the repo root handle this automatically via Turborepo's task graph.

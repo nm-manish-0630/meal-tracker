@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { MEAL_TYPES, type MealType } from '@repo/api';
+import { MEAL_TYPES, type MealType } from '@repo/shared';
 import { readExif } from '../lib/exif';
 import { detectMealType } from '../lib/meal-type-detect';
 import { compressImage } from '../lib/compress-image';

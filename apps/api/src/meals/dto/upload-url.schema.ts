@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MEAL_TYPES } from '@repo/api';
+import { MEAL_TYPES } from '@repo/shared';
 
 export const uploadUrlSchema = z.object({
   clientId: z.uuid(),
