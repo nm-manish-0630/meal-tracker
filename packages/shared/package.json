@@ -1,6 +1,7 @@
 {
-  "name": "@repo/api",
+  "name": "@repo/shared",
   "version": "0.0.0",
+  "type": "module",
   "private": true,
   "license": "MIT",
   "scripts": {
@@ -8,8 +9,6 @@
     "build": "tsc -b -v",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\""
   },
-  "main": "./dist/entry.js",
-  "types": "./dist/entry.d.ts",
   "files": [
     "./dist/**"
   ],
@@ -17,17 +16,11 @@
     "access": "public"
   },
   "exports": {
-    ".": {
-      "import": "./dist/entry.js",
-      "require": "./dist/entry.js"
-    },
-    "./*": {
-      "import": "./dist/*.js",
-      "require": "./dist/*.js"
+    "./meal-type": {
+      "import": "./dist/meal-type.js",
+      "require": "./dist/meal-type.js",
+      "types": "./dist/meal-type.d.ts"
     }
-  },
-  "dependencies": {
-    "@nestjs/mapped-types": "12.0.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
