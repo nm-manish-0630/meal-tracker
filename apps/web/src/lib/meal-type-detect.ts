@@ -1,4 +1,4 @@
-import type { MealType } from '@repo/shared';
+import type { MealType } from '@repo/shared/meal-type';
 
 export function detectMealType(capturedAt: Date): MealType {
   const hour = capturedAt.getHours() + capturedAt.getMinutes() / 60;

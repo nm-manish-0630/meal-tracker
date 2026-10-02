@@ -9,8 +9,6 @@
     "build": "tsc -b -v",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\""
   },
-  "main": "./dist/entry.js",
-  "types": "./dist/entry.d.ts",
   "files": [
     "./dist/**"
   ],
@@ -18,13 +16,10 @@
     "access": "public"
   },
   "exports": {
-    ".": {
-      "import": "./dist/entry.js",
-      "require": "./dist/entry.js"
-    },
-    "./*": {
-      "import": "./dist/*.js",
-      "require": "./dist/*.js"
+    "./meal-type": {
+      "import": "./dist/meal-type.js",
+      "require": "./dist/meal-type.js",
+      "types": "./dist/meal-type.d.ts"
     }
   },
   "devDependencies": {
