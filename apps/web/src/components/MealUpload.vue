@@ -14,7 +14,9 @@ interface RecentlyAdded {
   capturedAt: Date;
 }
 
-const clientId = ref('');
+const props = defineProps<{ clientId: string }>();
+const emit = defineEmits<{ uploaded: [] }>();
+
 const status = ref<Status>('idle');
 const selectedFile = ref<File | null>(null);
 const previewUrl = ref<string | null>(null);
@@ -63,7 +65,7 @@ async function onFileSelected(event: Event) {
 }
 
 async function addToLog() {
-  if (!clientId.value) {
+  if (!props.clientId) {
     errorMessage.value = 'Enter a client ID first';
     return;
   }
@@ -77,7 +79,7 @@ async function addToLog() {
     const capturedAtIso = detectedCapturedAt.value.toISOString();
 
     const { mealId, uploadUrl, r2ObjectKey } = await createUploadUrl({
-      clientId: clientId.value,
+      clientId: props.clientId,
       mealType: selectedMealType.value,
       capturedAt: capturedAtIso,
       contentType: 'image/jpeg',
@@ -94,6 +96,7 @@ async function addToLog() {
 
     recentlyAdded.value.unshift({ mealType: selectedMealType.value, capturedAt: detectedCapturedAt.value });
     resetToIdle();
+    emit('uploaded');
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Upload failed';
     status.value = 'review';
@@ -103,11 +106,6 @@ async function addToLog() {
 
 <template>
   <div class="meal-upload">
-    <label class="client-id">
-      Client ID
-      <input v-model="clientId" type="text" placeholder="paste a client id" />
-    </label>
-
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
 
     <div v-if="status === 'idle'" class="idle-target">
@@ -160,17 +158,6 @@ async function addToLog() {
   max-width: 480px;
   margin: 0 auto;
   padding: 16px;
-}
-
-.client-id {
-  display: block;
-  margin-bottom: 16px;
-}
-
-.client-id input {
-  display: block;
-  width: 100%;
-  margin-top: 4px;
 }
 
 .error {

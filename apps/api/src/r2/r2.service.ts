@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-const UPLOAD_URL_EXPIRY_SECONDS = 900;
+const PRESIGNED_URL_EXPIRY_SECONDS = 900;
 
 @Injectable()
 export class R2Service {
@@ -25,7 +25,13 @@ export class R2Service {
     return getSignedUrl(
       this.client,
       new PutObjectCommand({ Bucket: this.bucket, Key: key, ContentType: contentType }),
-      { expiresIn: UPLOAD_URL_EXPIRY_SECONDS },
+      { expiresIn: PRESIGNED_URL_EXPIRY_SECONDS },
     );
+  }
+
+  getDownloadUrl(key: string): Promise<string> {
+    return getSignedUrl(this.client, new GetObjectCommand({ Bucket: this.bucket, Key: key }), {
+      expiresIn: PRESIGNED_URL_EXPIRY_SECONDS,
+    });
   }
 }
