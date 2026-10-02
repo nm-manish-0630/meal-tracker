@@ -8,12 +8,9 @@ describe('App', () => {
     expect(wrapper.get('h1').text()).toBe('Meal Tracker');
   });
 
-  it('increments the counter on click', async () => {
+  it('starts in the idle upload state', () => {
     const wrapper = mount(App);
-    const button = wrapper.get('button');
-
-    await button.trigger('click');
-
-    expect(button.text()).toBe('Count is 1');
+    expect(wrapper.text()).toContain('Add a photo');
+    expect(wrapper.find('.review').exists()).toBe(false);
   });
 });

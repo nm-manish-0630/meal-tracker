@@ -287,6 +287,9 @@ importers:
 
   apps/web:
     dependencies:
+      piexifjs:
+        specifier: 1.0.6
+        version: 1.0.6
       vue:
         specifier: 3.5.43
         version: 3.5.43(typescript@5.9.3)
@@ -306,6 +309,9 @@ importers:
       '@types/node':
         specifier: 26.5.1
         version: 26.5.1
+      '@types/piexifjs':
+        specifier: 1.0.0
+        version: 1.0.0
       '@vitejs/plugin-vue':
         specifier: 6.0.9
         version: 6.0.9(vite@8.3.0(@types/node@26.5.1)(jiti@2.7.0)(terser@5.51.2))(vue@3.5.43(typescript@5.9.3))
@@ -388,6 +394,9 @@ importers:
       prettier:
         specifier: 3.9.6
         version: 3.9.6
+      vue-eslint-parser:
+        specifier: 10.4.1
+        version: 10.4.1(eslint@10.10.0(supports-color@8.1.1))(supports-color@8.1.1)
 
   packages/typescript-config:
     dependencies:
@@ -1909,6 +1918,9 @@ packages:
 
   '@types/pg@8.23.1':
     resolution: {integrity: sha512-fKVHpikPdg4GKks3JuLEhvwSyvwzF23hnabPy6DD8ljVbC7+6J5dQzdv4arV6jqq57djnMgs1HKBxX4P8aBI3A==}
+
+  '@types/piexifjs@1.0.0':
+    resolution: {integrity: sha512-PPiGeCkmkZQgYjvqtjD3kp4OkbCox2vEFVuK4DaLVOIazJLAXk+/ujbizkIPH5CN4AnN9Clo5ckzUlaj3+SzCA==}
 
   '@types/qs@6.15.1':
     resolution: {integrity: sha512-GZHUBZR9hckSUhrxmp1nG6NwdpM9fCunJwyThLW1X3AyHgd9IlHb6VANpQQqDr2o/qQp6McZ3y/IA2rVzKzSbw==}
@@ -3841,6 +3853,9 @@ packages:
   picomatch@4.0.7:
     resolution: {integrity: sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==}
     engines: {node: '>=12'}
+
+  piexifjs@1.0.6:
+    resolution: {integrity: sha512-0wVyH0cKohzBQ5Gi2V1BuxYpxWfxF3cSqfFXfPIpl5tl9XLS5z4ogqhUCD20AbHi0h9aJkqXNJnkVev6gwh2ag==}
 
   piscina@4.9.4:
     resolution: {integrity: sha512-RyBDr2VheQ8ZfH3N8SzQZHztqVyOtadTwLnUYof6gdj5161/eu2wNhCbGl5GHnNKDpnkicJYpKtL2J+y/gk6XA==}
@@ -6115,6 +6130,8 @@ snapshots:
       pg-protocol: 1.16.0
       pg-types: 2.2.0
 
+  '@types/piexifjs@1.0.0': {}
+
   '@types/qs@6.15.1': {}
 
   '@types/range-parser@1.2.7': {}
@@ -8093,6 +8110,8 @@ snapshots:
   picomatch@4.0.5: {}
 
   picomatch@4.0.7: {}
+
+  piexifjs@1.0.6: {}
 
   piscina@4.9.4:
     optionalDependencies:

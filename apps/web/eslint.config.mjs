@@ -4,6 +4,6 @@ import { vueConfig } from '@repo/eslint-config/vue';
 export default [
   ...vueConfig,
   {
-    ignores: ['dist/**'],
+    ignores: ['dist/**', 'check-exif.mjs'],
   },
 ];
