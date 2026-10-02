@@ -60,3 +60,24 @@ export async function confirmUpload(input: {
   if (!res.ok) throw new Error(await extractErrorMessage(res));
   return res.json() as Promise<ConfirmUploadResponse>;
 }
+
+export interface HistoryPhoto {
+  id: string;
+  uploadOrder: number;
+  capturedAt: string;
+  fileSize: number;
+  downloadUrl: string;
+}
+
+export interface HistoryMeal {
+  id: string;
+  mealType: MealType;
+  mealDate: string;
+  photos: HistoryPhoto[];
+}
+
+export async function getHistory(clientId: string): Promise<HistoryMeal[]> {
+  const res = await fetch(`${API_BASE_URL}/meals/history?clientId=${encodeURIComponent(clientId)}`);
+  if (!res.ok) throw new Error(await extractErrorMessage(res));
+  return res.json() as Promise<HistoryMeal[]>;
+}

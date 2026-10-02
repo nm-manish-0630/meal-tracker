@@ -3,6 +3,7 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import { PrismaService } from '../prisma/prisma.service';
 import { R2Service } from '../r2/r2.service';
 import type { ConfirmUploadInput } from './dto/confirm-upload.schema';
+import type { HistoryQueryInput } from './dto/history-query.schema';
 import type { UploadUrlInput } from './dto/upload-url.schema';
 
 const MAX_PHOTOS_PER_MEAL = 5;
@@ -74,6 +75,43 @@ export class MealsService {
       }
       throw error;
     }
+  }
+
+  async getHistory(query: HistoryQueryInput) {
+    const client = await this.prisma.user.findUnique({ where: { id: query.clientId } });
+    if (!client) {
+      throw new NotFoundException('Client not found');
+    }
+
+    const mealDateFilter: { gte?: Date; lte?: Date } = {};
+    if (query.from) mealDateFilter.gte = new Date(query.from);
+    if (query.to) mealDateFilter.lte = new Date(query.to);
+
+    const meals = await this.prisma.meal.findMany({
+      where: {
+        userId: query.clientId,
+        ...(Object.keys(mealDateFilter).length > 0 ? { mealDate: mealDateFilter } : {}),
+      },
+      include: { photos: { orderBy: { uploadOrder: 'asc' } } },
+      orderBy: [{ mealDate: 'desc' }, { createdAt: 'asc' }],
+    });
+
+    return Promise.all(
+      meals.map(async (meal) => ({
+        id: meal.id,
+        mealType: meal.mealType,
+        mealDate: meal.mealDate.toISOString().slice(0, 10),
+        photos: await Promise.all(
+          meal.photos.map(async (photo) => ({
+            id: photo.id,
+            uploadOrder: photo.uploadOrder,
+            capturedAt: photo.capturedAt,
+            fileSize: photo.fileSize,
+            downloadUrl: await this.r2.getDownloadUrl(photo.r2ObjectKey),
+          })),
+        ),
+      })),
+    );
   }
 
   private isUniqueConstraintError(error: unknown): boolean {
