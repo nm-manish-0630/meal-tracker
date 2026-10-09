@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "piexifjs": "1.0.6",
-    "vue": "3.5.43"
+    "vue": "3.5.43",
+    "vue-router": "5.3.1"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

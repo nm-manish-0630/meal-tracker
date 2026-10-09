@@ -76,8 +76,32 @@ export interface HistoryMeal {
   photos: HistoryPhoto[];
 }
 
-export async function getHistory(clientId: string): Promise<HistoryMeal[]> {
-  const res = await fetch(`${API_BASE_URL}/meals/history?clientId=${encodeURIComponent(clientId)}`);
+export async function getHistory(clientId: string, range?: { from: string; to: string }): Promise<HistoryMeal[]> {
+  const params = new URLSearchParams({ clientId });
+  if (range) {
+    params.set('from', range.from);
+    params.set('to', range.to);
+  }
+  const res = await fetch(`${API_BASE_URL}/meals/history?${params.toString()}`);
   if (!res.ok) throw new Error(await extractErrorMessage(res));
   return res.json() as Promise<HistoryMeal[]>;
+}
+
+export async function updateMealType(mealId: string, mealType: MealType): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/meals/${mealId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mealType }),
+  });
+  if (!res.ok) throw new Error(await extractErrorMessage(res));
+}
+
+export async function deleteMeal(mealId: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/meals/${mealId}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error(await extractErrorMessage(res));
+}
+
+export async function deletePhoto(photoId: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/photos/${photoId}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error(await extractErrorMessage(res));
 }
