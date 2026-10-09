@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { R2Service } from '../r2/r2.service';
 import type { ConfirmUploadInput } from './dto/confirm-upload.schema';
 import type { HistoryQueryInput } from './dto/history-query.schema';
+import type { UpdateMealInput } from './dto/update-meal.schema';
 import type { UploadUrlInput } from './dto/upload-url.schema';
 
 const MAX_PHOTOS_PER_MEAL = 5;
@@ -112,6 +113,43 @@ export class MealsService {
         ),
       })),
     );
+  }
+
+  async updateMeal(mealId: string, dto: UpdateMealInput) {
+    const meal = await this.prisma.meal.findUnique({ where: { id: mealId } });
+    if (!meal) {
+      throw new NotFoundException('Meal not found');
+    }
+
+    try {
+      return await this.prisma.meal.update({ where: { id: mealId }, data: { mealType: dto.mealType } });
+    } catch (error) {
+      if (this.isUniqueConstraintError(error)) {
+        throw new ConflictException(`A ${dto.mealType} meal already exists for this day`);
+      }
+      throw error;
+    }
+  }
+
+  async deleteMeal(mealId: string) {
+    const meal = await this.prisma.meal.findUnique({ where: { id: mealId }, include: { photos: true } });
+    if (!meal) {
+      throw new NotFoundException('Meal not found');
+    }
+
+    await Promise.all(meal.photos.map((photo) => this.r2.deleteObject(photo.r2ObjectKey)));
+    await this.prisma.photo.deleteMany({ where: { mealId } });
+    await this.prisma.meal.delete({ where: { id: mealId } });
+  }
+
+  async deletePhoto(photoId: string) {
+    const photo = await this.prisma.photo.findUnique({ where: { id: photoId } });
+    if (!photo) {
+      throw new NotFoundException('Photo not found');
+    }
+
+    await this.r2.deleteObject(photo.r2ObjectKey);
+    await this.prisma.photo.delete({ where: { id: photoId } });
   }
 
   private isUniqueConstraintError(error: unknown): boolean {
