@@ -21,7 +21,8 @@ Live in Vercel's environment variable store, scoped to Production (and separatel
 
 | Variable                                    | Where                 | Purpose                                                                                            |
 | ------------------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`                              | Vercel                | Neon Postgres connection string                                                                    |
+| `DATABASE_URL`                              | Vercel                | Neon **pooled** connection string — what the running app queries through                          |
+| `DIRECT_URL`                                | Vercel (build-time)   | Neon **direct** (non-pooled) connection string — `prisma generate`/`migrate deploy` use this, run automatically as part of the build (see Database Migrations below), not from a developer machine |
 | `R2_ACCOUNT_ID`                             | Vercel                | Cloudflare account ID                                                                              |
 | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | Vercel                | R2 API credentials (S3-compatible), scoped to the bucket                                           |
 | `R2_BUCKET_NAME`                            | Vercel                | Which bucket to use                                                                                |
@@ -49,9 +50,9 @@ The schema has changed repeatedly over the course of design (dropped `client_gro
 **Decision:** Prisma (schema in `apps/api/prisma/schema.prisma`, connection config in `apps/api/prisma.config.ts`, migrations via `prisma migrate dev`). The original recommendation was TypeORM with Prisma as an alternative — Prisma was the one actually adopted.
 
 - Every schema change is a migration file, committed to the repo — the schema's history lives in git, not in memory
-- Migrations run as a deploy step (or manually via CLI before a deploy) — never hand-edited directly in Neon's SQL console for anything beyond one-off debugging
+- `prisma migrate deploy` runs automatically as part of `apps/api`'s own `build` script (via `turbo run build`, which Vercel's Build Command invokes) — migrations apply on every deploy, never by hand against Neon from a developer machine. Never hand-edited directly in Neon's SQL console for anything beyond one-off debugging
 - Local dev runs migrations against the dev branch (see below) before testing
-- Prisma 7 connects via a driver adapter (`@prisma/adapter-pg` for Postgres) rather than a schema-level `datasource.url` — see `apps/api/src/prisma/prisma.service.ts` for the actual construction
+- Prisma 7 connects via a driver adapter (`@prisma/adapter-pg` for Postgres) rather than a schema-level `datasource.url` — see `apps/api/src/prisma/prisma.service.ts` for the actual construction. CLI operations (`generate`, `migrate deploy`) instead go through `apps/api/prisma.config.ts`, which reads `DIRECT_URL` — kept separate from the app's pooled `DATABASE_URL` because `migrate deploy` is safer run against Neon's direct connection, not through the pooler
 - **Known quirk (Prisma 7.10.0):** `prisma migrate dev`'s own auto-generate step has been observed producing a generated client with an empty `runtimeDataModel` (model delegates like `prisma.user` come back `undefined`) even though the migration SQL itself was correct. `pnpm db:migrate` now always chains an explicit `db:generate` afterward specifically to guard against this — don't run `prisma migrate dev` directly without a follow-up `prisma generate` until this is confirmed fixed upstream
 
 ## 5. Local Development

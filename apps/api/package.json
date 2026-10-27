@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "pnpm build && concurrently -k \"swc src -d dist --strip-leading-paths --watch\" \"dotenv -e .env -- node --watch dist/main.js\"",
-    "build": "swc src -d dist --strip-leading-paths",
+    "build": "dotenv -e .env -- prisma generate && dotenv -e .env -- prisma migrate deploy && swc src -d dist --strip-leading-paths",
     "check-types": "tsc --noEmit -p tsconfig.build.json",
     "start": "dotenv -e .env -- node dist/main",
     "start:debug": "dotenv -e .env -- node --inspect --watch dist/main.js",
