@@ -1,18 +1,40 @@
-{
-  "$schema": "https://swc.rs/schema.json",
-  "jsc": {
-    "parser": {
-      "syntax": "typescript",
-      "decorators": true
+[
+  {
+    "$schema": "https://swc.rs/schema.json",
+    "test": "\\.mts$",
+    "jsc": {
+      "parser": {
+        "syntax": "typescript",
+        "decorators": true
+      },
+      "transform": {
+        "legacyDecorator": true,
+        "decoratorMetadata": true
+      },
+      "target": "es2022"
     },
-    "transform": {
-      "legacyDecorator": true,
-      "decoratorMetadata": true
+    "module": {
+      "type": "es6"
     },
-    "target": "es2022"
+    "sourceMaps": true
   },
-  "module": {
-    "type": "commonjs"
-  },
-  "sourceMaps": true
-}
+  {
+    "$schema": "https://swc.rs/schema.json",
+    "exclude": "\\.mts$",
+    "jsc": {
+      "parser": {
+        "syntax": "typescript",
+        "decorators": true
+      },
+      "transform": {
+        "legacyDecorator": true,
+        "decoratorMetadata": true
+      },
+      "target": "es2022"
+    },
+    "module": {
+      "type": "commonjs"
+    },
+    "sourceMaps": true
+  }
+]
