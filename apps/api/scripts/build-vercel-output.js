@@ -12,7 +12,7 @@ const outDir = path.join(__dirname, '..', '.vercel', 'output', 'functions', 'api
 fs.mkdirSync(outDir, { recursive: true });
 
 buildSync({
-  entryPoints: [path.join(__dirname, '..', 'dist', 'main.mjs')],
+  entryPoints: [path.join(__dirname, '..', 'dist', 'main.js')],
   outfile: path.join(outDir, 'index.js'),
   bundle: true,
   platform: 'node',
