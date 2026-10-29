@@ -64,3 +64,9 @@ pnpm-debug.log*
 .DS_Store
 *.pem
 *.tsbuildinfo
+
+# Local dev helper script, not part of the shipped project
+/script.ts
+
+# Claude Code agent worktrees
+.claude/worktrees/
