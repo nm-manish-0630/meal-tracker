@@ -8,15 +8,104 @@ datasource db {
 }
 
 model User {
-  id       String   @id @default(uuid()) @db.Uuid
-  name     String
-  email    String   @unique
-  role     String
-  isActive Boolean  @default(true) @map("is_active")
+  id             String  @id @default(uuid()) @db.Uuid
+  name           String
+  email          String  @unique
+  role           String
+  trainerGroupId String? @map("trainer_group_id") @db.Uuid
+  isActive       Boolean @default(true) @map("is_active")
 
-  meals Meal[]
+  trainerGroup            TrainerGroup?            @relation(fields: [trainerGroupId], references: [id])
+  meals                   Meal[]
+  notificationPreferences NotificationPreference[]
+  digestMessages          DigestMessage[]
+  digestDeliveries        DigestDelivery[]
 
   @@map("users")
+}
+
+model TrainerGroup {
+  id             String   @id @default(uuid()) @db.Uuid
+  name           String
+  digestTimezone String   @default("UTC") @map("digest_timezone")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  users User[]
+
+  @@map("trainer_groups")
+}
+
+model NotificationPreference {
+  id                String   @id @default(uuid()) @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  channel           String
+  channelIdentifier String   @map("channel_identifier")
+  isPrimary         Boolean  @default(false) @map("is_primary")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("notification_preferences")
+}
+
+model AppSettings {
+  id                 String   @id @default(uuid()) @db.Uuid
+  digestTime         DateTime @default(dbgenerated("'20:00:00'")) @map("digest_time") @db.Time
+  digestTimeTimezone String   @default("UTC") @map("digest_time_timezone")
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("app_settings")
+}
+
+model DigestRun {
+  id             String    @id @default(uuid()) @db.Uuid
+  runDate        DateTime  @unique @map("run_date") @db.Date
+  status         String    @default("pending")
+  windowOpenedAt DateTime? @map("window_opened_at")
+  completedAt    DateTime? @map("completed_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  @@map("digest_runs")
+}
+
+model DigestMessage {
+  id             String    @id @default(uuid()) @db.Uuid
+  trainerId      String    @map("trainer_id") @db.Uuid
+  runDate        DateTime  @map("run_date") @db.Date
+  status         String    @default("pending")
+  slackChannelId String?   @map("slack_channel_id")
+  slackMessageTs String?   @map("slack_message_ts")
+  attemptCount   Int       @default(0) @map("attempt_count")
+  attemptLog     Json      @default("[]") @map("attempt_log")
+  lastAttemptAt  DateTime? @map("last_attempt_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  trainer    User             @relation(fields: [trainerId], references: [id])
+  deliveries DigestDelivery[]
+
+  @@unique([trainerId, runDate])
+  @@map("digest_messages")
+}
+
+model DigestDelivery {
+  id              String    @id @default(uuid()) @db.Uuid
+  digestMessageId String?   @map("digest_message_id") @db.Uuid
+  mealId          String    @map("meal_id") @db.Uuid
+  mealDate        DateTime  @map("meal_date") @db.Date
+  trainerId       String    @map("trainer_id") @db.Uuid
+  status          String    @default("pending")
+  photoProgress   Json      @default("[]") @map("photo_progress")
+  attemptCount    Int       @default(0) @map("attempt_count")
+  attemptLog      Json      @default("[]") @map("attempt_log")
+  lastAttemptAt   DateTime? @map("last_attempt_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  digestMessage DigestMessage? @relation(fields: [digestMessageId], references: [id])
+  meal          Meal           @relation(fields: [mealId], references: [id])
+  trainer       User           @relation(fields: [trainerId], references: [id])
+
+  @@unique([mealId, trainerId])
+  @@map("digest_deliveries")
 }
 
 model Meal {
@@ -26,8 +115,9 @@ model Meal {
   mealDate  DateTime @map("meal_date") @db.Date
   createdAt DateTime @default(now()) @map("created_at")
 
-  user   User    @relation(fields: [userId], references: [id])
-  photos Photo[]
+  user       User             @relation(fields: [userId], references: [id])
+  photos     Photo[]
+  deliveries DigestDelivery[]
 
   @@unique([userId, mealType, mealDate])
   @@map("meals")
