@@ -105,3 +105,25 @@ export async function deletePhoto(photoId: string): Promise<void> {
   const res = await fetch(`${API_BASE_URL}/photos/${photoId}`, { method: 'DELETE' });
   if (!res.ok) throw new Error(await extractErrorMessage(res));
 }
+
+export interface TrainerClientSummary {
+  id: string;
+  name: string;
+  lastUploadAt: string | null;
+}
+
+export async function getTrainerGroupClients(groupId: string): Promise<TrainerClientSummary[]> {
+  const res = await fetch(`${API_BASE_URL}/trainer/group/${groupId}/clients`);
+  if (!res.ok) throw new Error(await extractErrorMessage(res));
+  return res.json() as Promise<TrainerClientSummary[]>;
+}
+
+export async function getTrainerClientMeals(
+  clientId: string,
+  range: { from: string; to: string },
+): Promise<HistoryMeal[]> {
+  const params = new URLSearchParams({ from: range.from, to: range.to });
+  const res = await fetch(`${API_BASE_URL}/trainer/clients/${clientId}/meals?${params.toString()}`);
+  if (!res.ok) throw new Error(await extractErrorMessage(res));
+  return res.json() as Promise<HistoryMeal[]>;
+}

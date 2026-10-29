@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from './HomeView.vue';
 import PerDayView from './PerDayView.vue';
@@ -13,16 +13,14 @@ const router = createRouter({
 });
 
 describe('HomeView', () => {
-  it('renders the heading', async () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('prompts for a client id when none is set', async () => {
     const wrapper = mount(HomeView, { global: { plugins: [router] } });
     await router.isReady();
     expect(wrapper.get('h1').text()).toBe('Meal Tracker');
-  });
-
-  it('starts in the idle upload state', async () => {
-    const wrapper = mount(HomeView, { global: { plugins: [router] } });
-    await router.isReady();
-    expect(wrapper.text()).toContain('Add a photo');
-    expect(wrapper.find('.review').exists()).toBe(false);
+    expect(wrapper.find('input').exists()).toBe(true);
   });
 });

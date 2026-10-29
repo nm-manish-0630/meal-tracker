@@ -12,6 +12,8 @@ import {
   confirmUpload,
   type HistoryMeal,
 } from '../lib/api';
+import { formatMonthDayLong, formatWeekdayMonthDay } from '../lib/format-date';
+import ThemeToggle from '../components/ThemeToggle.vue';
 
 const route = useRoute();
 
@@ -115,10 +117,14 @@ function copyLink() {
 
 <template>
   <main class="per-day">
-    <header>
-      <h1>{{ date() }}</h1>
+    <header class="sticky-header">
+      <div class="header-top">
+        <h1>{{ clientId() }} — {{ formatWeekdayMonthDay(date()) }}</h1>
+        <ThemeToggle />
+      </div>
       <p class="subtitle">Every meal photo logged this day, in one shareable page</p>
       <div class="share-row">
+        <span class="link-icon">🔗</span>
         <code>{{ currentUrl }}</code>
         <button type="button" @click="copyLink">Share</button>
       </div>
@@ -138,7 +144,11 @@ function copyLink() {
     </p>
 
     <section v-for="meal in meals" :id="meal.mealType" :key="meal.id" class="meal-section">
-      <h2>{{ meal.mealType }} <span class="count">· {{ meal.photos.length }} photos</span></h2>
+      <h2>
+        {{ meal.mealType }}
+        <a :href="`#${meal.mealType}`" class="anchor-icon">#</a>
+        <span class="count">· {{ meal.photos.length }} photos</span>
+      </h2>
 
       <div class="section-actions">
         <button type="button" @click="triggerAddPhoto(meal.mealType)">Add photo</button>
@@ -177,21 +187,40 @@ function copyLink() {
     </section>
 
     <footer v-if="meals.length" class="footer-note">
-      Anyone with this link sees this exact page — and can add, edit, or delete here too. There's no separate
-      client or trainer view of this page.
+      That's every photo logged for {{ formatMonthDayLong(date()) }}. Anyone with this link sees this exact page —
+      and can add, edit, or delete here too. There's no separate client or trainer view of this page.
     </footer>
   </main>
 </template>
 
 <style scoped>
 .per-day {
-  max-width: 720px;
+  max-width: 960px;
   margin: 0 auto;
   padding: 16px;
 }
 
+.sticky-header {
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  padding-top: 8px;
+  z-index: 1;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.header-top h1 {
+  font-size: 30px;
+}
+
 .subtitle {
-  color: #56685f;
+  color: var(--text-secondary);
   margin-top: 4px;
 }
 
@@ -210,13 +239,22 @@ function copyLink() {
   font-size: 0.85em;
 }
 
+.share-row button {
+  min-height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  padding: 0 16px;
+}
+
 .error {
   color: #b00020;
 }
 
 .empty {
   text-align: center;
-  color: #56685f;
+  color: var(--text-secondary);
   margin-top: 48px;
 }
 
@@ -228,21 +266,35 @@ function copyLink() {
 }
 
 .meal-nav a {
-  padding: 6px 12px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
   border-radius: 999px;
-  border: 1px solid #999;
-  text-decoration: none;
-  color: inherit;
+  border: 1px solid var(--border);
 }
 
 .meal-section {
   margin-top: 32px;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid var(--border);
   padding-top: 16px;
 }
 
+.meal-section h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  text-transform: capitalize;
+}
+
+.anchor-icon {
+  color: var(--text-secondary);
+  font-weight: normal;
+  font-size: 0.8em;
+}
+
 .count {
-  color: #56685f;
+  color: var(--text-secondary);
   font-weight: normal;
   font-size: 0.7em;
 }
@@ -253,8 +305,18 @@ function copyLink() {
   margin: 8px 0;
 }
 
+.section-actions button {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+
 .section-actions .delete {
   color: #b00020;
+  border-color: #b00020;
 }
 
 .hidden-file-input {
@@ -268,21 +330,23 @@ function copyLink() {
 }
 
 .meal-type-pills button {
-  padding: 6px 12px;
+  min-height: 44px;
+  padding: 0 16px;
   border-radius: 999px;
-  border: 1px solid #999;
-  background: white;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
 }
 
 .meal-type-pills button.selected {
-  background: #0e7c74;
-  color: white;
-  border-color: #0e7c74;
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
 }
 
 .photos {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  grid-template-columns: repeat(6, 1fr);
   gap: 12px;
   margin-top: 12px;
 }
@@ -291,12 +355,12 @@ function copyLink() {
   width: 100%;
   aspect-ratio: 1;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 .captured-at {
   font-size: 0.8em;
-  color: #56685f;
+  color: var(--text-secondary);
   margin: 4px 0;
 }
 
@@ -313,8 +377,8 @@ function copyLink() {
 .footer-note {
   margin-top: 32px;
   padding-top: 16px;
-  border-top: 1px solid #ddd;
-  color: #56685f;
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
   font-size: 0.85em;
 }
 </style>
