@@ -6,6 +6,7 @@ import { detectMealType } from '../lib/meal-type-detect';
 import { compressImage } from '../lib/compress-image';
 import { createUploadUrl, uploadToR2, confirmUpload } from '../lib/api';
 import { fromDatetimeLocalValue, toDatetimeLocalValue } from '../lib/datetime-local';
+import { formatRelativeDayTime } from '../lib/format-date';
 
 type Status = 'idle' | 'review' | 'uploading';
 
@@ -15,7 +16,7 @@ interface RecentlyAdded {
 }
 
 const props = defineProps<{ clientId: string }>();
-const emit = defineEmits<{ uploaded: [] }>();
+const emit = defineEmits<{ uploaded: [capturedAt: Date] }>();
 
 const status = ref<Status>('idle');
 const selectedFile = ref<File | null>(null);
@@ -94,9 +95,10 @@ async function addToLog() {
       capturedAt: capturedAtIso,
     });
 
-    recentlyAdded.value.unshift({ mealType: selectedMealType.value, capturedAt: detectedCapturedAt.value });
+    const capturedAt = detectedCapturedAt.value;
+    recentlyAdded.value.unshift({ mealType: selectedMealType.value, capturedAt });
     resetToIdle();
-    emit('uploaded');
+    emit('uploaded', capturedAt);
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Upload failed';
     status.value = 'review';
@@ -111,14 +113,20 @@ async function addToLog() {
     <div v-if="status === 'idle'" class="idle-target">
       <label>
         <input type="file" accept="image/*" @change="onFileSelected" />
-        + Add a photo
+        <span class="camera-icon">📷</span>
+        <span class="idle-label">Add a photo</span>
+        <span class="idle-helper">
+          Pick any photo from your library — today's, or one from earlier in the week. We'll read its timestamp.
+        </span>
       </label>
     </div>
 
     <div v-else class="review">
       <img v-if="previewUrl" :src="previewUrl" alt="Selected meal photo" class="preview" />
+      <p v-if="detectedCapturedAt" class="detected-time">{{ formatRelativeDayTime(detectedCapturedAt) }}</p>
+      <p class="detected-helper">Detected from the photo's timestamp</p>
       <label class="captured-at">
-        Taken at
+        Adjust time
         <input v-model="capturedAtInput" type="datetime-local" />
       </label>
 
@@ -146,7 +154,8 @@ async function addToLog() {
       <h2>Recently added</h2>
       <ul>
         <li v-for="(item, index) in recentlyAdded" :key="index">
-          {{ item.mealType }} — {{ item.capturedAt.toLocaleString() }}
+          <span class="photo-icon">🖼</span>
+          <span>{{ item.mealType }} — {{ item.capturedAt.toLocaleString() }}</span>
         </li>
       </ul>
     </div>
@@ -165,19 +174,53 @@ async function addToLog() {
 }
 
 .idle-target {
-  border: 2px dashed #999;
-  border-radius: 12px;
+  border: 2px dashed var(--border);
+  border-radius: 16px;
   padding: 32px;
   text-align: center;
+}
+
+.idle-target label {
+  display: block;
+  cursor: pointer;
 }
 
 .idle-target input[type='file'] {
   display: none;
 }
 
+.camera-icon {
+  display: block;
+  font-size: 32px;
+}
+
+.idle-label {
+  display: block;
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.idle-helper {
+  display: block;
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font-size: 0.85em;
+}
+
 .preview {
   width: 100%;
-  border-radius: 8px;
+  border-radius: 12px;
+}
+
+.detected-time {
+  margin-top: 12px;
+  font-weight: 600;
+}
+
+.detected-helper {
+  color: var(--text-secondary);
+  font-size: 0.8em;
+  margin-top: 2px;
 }
 
 .captured-at {
@@ -188,6 +231,7 @@ async function addToLog() {
 .captured-at input {
   display: block;
   margin-top: 4px;
+  min-height: 44px;
 }
 
 .meal-type-pills {
@@ -198,16 +242,18 @@ async function addToLog() {
 
 .meal-type-pills button {
   flex: 1;
+  min-height: 44px;
   padding: 8px;
   border-radius: 999px;
-  border: 1px solid #999;
-  background: white;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
 }
 
 .meal-type-pills button.selected {
-  background: #0e7c74;
-  color: white;
-  border-color: #0e7c74;
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
 }
 
 .actions {
@@ -217,10 +263,37 @@ async function addToLog() {
 
 .actions button {
   flex: 1;
-  padding: 10px;
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
 }
 
 .recently-added {
   margin-top: 24px;
+}
+
+.recently-added ul {
+  list-style: none;
+  padding: 0;
+}
+
+.recently-added li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.photo-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>
