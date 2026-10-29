@@ -1,0 +1,4 @@
+{
+  "framework": null,
+  "buildCommand": "cd ../.. && turbo run build --filter=api && cd apps/api && node scripts/build-vercel-output.js"
+}
