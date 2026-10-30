@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { addUtcDays, startOfUtcDay } from '../common/date.util';
 import { PrismaService } from '../prisma/prisma.service';
 import { R2Service } from '../r2/r2.service';
 import type { ConfirmUploadInput } from './dto/confirm-upload.schema';
@@ -8,6 +9,7 @@ import type { UpdateMealInput } from './dto/update-meal.schema';
 import type { UploadUrlInput } from './dto/upload-url.schema';
 
 const MAX_PHOTOS_PER_MEAL = 5;
+const CATCHUP_WINDOW_DAYS = 7;
 
 @Injectable()
 export class MealsService {
@@ -68,6 +70,8 @@ export class MealsService {
           uploadedAt: new Date(),
         },
       });
+
+      await this.enqueueDigestDelivery(meal, photo.id, 'enqueued');
 
       return { photoId: photo.id, uploadOrder: photo.uploadOrder };
     } catch (error) {
@@ -150,6 +154,37 @@ export class MealsService {
 
     await this.r2.deleteObject(photo.r2ObjectKey);
     await this.prisma.photo.delete({ where: { id: photoId } });
+  }
+
+  // Event-driven enqueue (ADR-012): the only place a digest_deliveries row is created or
+  // gains a photo. One atomic INSERT ... ON CONFLICT DO UPDATE per trainer, so concurrent
+  // photo confirms for the same meal never drop each other's append to photo_progress.
+  async enqueueDigestDelivery(meal: { id: string; userId: string; mealDate: Date }, photoId: string, stage: string) {
+    const cutoff = addUtcDays(startOfUtcDay(new Date()), -CATCHUP_WINDOW_DAYS);
+    if (meal.mealDate < cutoff) return;
+
+    const client = await this.prisma.user.findUnique({ where: { id: meal.userId } });
+    if (!client?.trainerGroupId) return;
+
+    const trainers = await this.prisma.user.findMany({
+      where: { trainerGroupId: client.trainerGroupId, role: 'trainer', isActive: true },
+      select: { id: true },
+    });
+
+    const photoProgressEntry = JSON.stringify([{ photo_id: photoId, status: 'pending' }]);
+    const attemptLogEntry = JSON.stringify([{ at: new Date().toISOString(), stage }]);
+
+    for (const trainer of trainers) {
+      await this.prisma.$executeRaw`
+        INSERT INTO digest_deliveries (id, meal_id, meal_date, trainer_id, status, photo_progress, attempt_count, attempt_log, created_at)
+        VALUES (${randomUUID()}, ${meal.id}, ${meal.mealDate}, ${trainer.id}, 'pending', ${photoProgressEntry}::jsonb, 0, ${attemptLogEntry}::jsonb, now())
+        ON CONFLICT (meal_id, trainer_id) DO UPDATE SET
+          photo_progress = digest_deliveries.photo_progress || ${photoProgressEntry}::jsonb,
+          status = 'pending',
+          attempt_count = CASE WHEN digest_deliveries.status = 'sent' THEN 0 ELSE digest_deliveries.attempt_count END,
+          attempt_log = digest_deliveries.attempt_log || ${attemptLogEntry}::jsonb
+      `;
+    }
   }
 
   private isUniqueConstraintError(error: unknown): boolean {
