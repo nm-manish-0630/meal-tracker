@@ -20,6 +20,21 @@
       "import": "./dist/meal-type.js",
       "require": "./dist/meal-type.js",
       "types": "./dist/meal-type.d.ts"
+    },
+    "./notification-channel": {
+      "import": "./dist/notification-channel.js",
+      "require": "./dist/notification-channel.js",
+      "types": "./dist/notification-channel.d.ts"
+    },
+    "./digest-run-status": {
+      "import": "./dist/digest-run-status.js",
+      "require": "./dist/digest-run-status.js",
+      "types": "./dist/digest-run-status.d.ts"
+    },
+    "./digest-status": {
+      "import": "./dist/digest-status.js",
+      "require": "./dist/digest-status.js",
+      "types": "./dist/digest-status.d.ts"
     }
   },
   "devDependencies": {
