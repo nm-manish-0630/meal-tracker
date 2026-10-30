@@ -8,5 +8,6 @@ import { MealsService } from './meals.service';
   imports: [R2Module],
   controllers: [MealsController, PhotosController],
   providers: [MealsService],
+  exports: [MealsService],
 })
 export class MealsModule {}
