@@ -1,8 +1,8 @@
 # Meal Tracker — UI Spec
 
-Plain-language description of the 6 mockup screens, extracted from the Cowork Design-canvas mockups built for this project. There is no live app yet — this is the target look, layout, and interaction model to build to.
+Plain-language description of the 7 mockup screens, extracted from the Cowork Design-canvas mockups built for this project. There is no live app yet — this is the target look, layout, and interaction model to build to.
 
-**A note on the source files:** the original mockups live as `.dc.html` files (`ClientDashboard.dc.html`, `ClientMealHistory.dc.html`, `Main.dc.html`, `PerDayView.dc.html`, `TrainerDashboard.dc.html`, `SlackDigest.dc.html`). Those use a proprietary Cowork "Design canvas" templating syntax (`<x-dc>`, `<helmet>`, `sc-for`, `sc-if`, `{{dotted.lookup}}` template holes, a `data-dc-script`/`DCLogic` component class) that is **not** valid Vue, HTML, or any framework this app is built with — it is not meant to be copied into the codebase or used as a reference for markup structure. This document is the intended reference for implementation; treat the `.dc.html` files (if you have access to them) purely as visual/interaction reference, not as code to port.
+**A note on the source files:** the original mockups live as `.dc.html` files (`ClientDashboard.dc.html`, `ClientMealHistory.dc.html`, `Main.dc.html`, `PerDayView.dc.html`, `TrainerDashboard.dc.html`, `AdminDashboard.dc.html`, `SlackDigest.dc.html`). Those use a proprietary Cowork "Design canvas" templating syntax (`<x-dc>`, `<helmet>`, `sc-for`, `sc-if`, `{{dotted.lookup}}` template holes, a `data-dc-script`/`DCLogic` component class) that is **not** valid Vue, HTML, or any framework this app is built with — it is not meant to be copied into the codebase or used as a reference for markup structure. This document is the intended reference for implementation; treat the `.dc.html` files (if you have access to them) purely as visual/interaction reference, not as code to port.
 
 ## Design System
 
@@ -10,17 +10,17 @@ Plain-language description of the 6 mockup screens, extracted from the Cowork De
 
 **Color tokens** (CSS custom properties in the mockups — same names work as a starting point for a Tailwind config or CSS variables file):
 
-| Token                                    | Light     | Dark      |
-| ---------------------------------------- | --------- | --------- |
-| `--bg`                                   | `#F4F9F8` | `#0F1715` |
-| `--surface`                              | `#FFFFFF` | `#182420` |
-| `--surface-2`                            | `#E1EDEA` | `#223129` |
-| `--text`                                 | `#142420` | `#EAF3F0` |
-| `--text-secondary`                       | `#56685F` | `#9FB3AC` |
-| `--border`                               | `#DCE8E5` | `#29372F` |
-| `--accent` (teal)                        | `#0E7C74` | same      |
-| `--accent-2` (terracotta)                | `#C1652F` | same      |
-| `--warn` (amber, Trainer Dashboard only) | `#D9A441` | same      |
+| Token | Light | Dark |
+|---|---|---|
+| `--bg` | `#F4F9F8` | `#0F1715` |
+| `--surface` | `#FFFFFF` | `#182420` |
+| `--surface-2` | `#E1EDEA` | `#223129` |
+| `--text` | `#142420` | `#EAF3F0` |
+| `--text-secondary` | `#56685F` | `#9FB3AC` |
+| `--border` | `#DCE8E5` | `#29372F` |
+| `--accent` (teal) | `#0E7C74` | same |
+| `--accent-2` (terracotta) | `#C1652F` | same |
+| `--warn` (amber, Trainer Dashboard only) | `#D9A441` | same |
 
 Every screen has a light/dark toggle in its header — a small two-button segmented control (Light / Dark, each with a sun/moon icon), top-right. Selecting one swaps every token above app-wide for that screen.
 
@@ -97,7 +97,26 @@ This is the single most implementation-relevant screen in the mockups: it's the 
 
 This is PRD Feature 3's "View Only" screen — no edit affordances live in this dashboard's own chrome (the client list and the day-list table have no add/edit/delete anywhere), consistent with ADR-015: "View Only" describes this browsing screen specifically, not the per-day page it links into.
 
-## 6. Slack Digest Preview (not a real app screen — a message mockup)
+## 6. Admin Dashboard (`/admin`, shared-password gated per ADR-004)
+
+**Viewport:** desktop, 1280×920 — list-plus-detail layout.
+
+Covers all of PRD Feature 5: user CRUD, trainer-group CRUD, and the group-assignment relationship between them (ADR-005's direct `trainer_group_id` FK — the same field both a client and a trainer carry). Structure:
+
+- **Header:** "Admin" title (Fraunces, 28px) + "Manage clients, trainers, and trainer groups" subtitle, plus a small note — "Shared-password protected (ADR-004) — this mockup starts past that gate" — flagging that the login screen itself isn't part of this mockup. Light/dark toggle, top-right, same as every other screen.
+- **Tab switcher:** a two-option segmented control, "Users" / "Trainer groups", directly under the header.
+- **Left pane (list, scrollable):** depends on the active tab.
+  - **Users tab:** a column-header row (User / Role / Group / Status) above a list of every user — client and trainer together. Each row: avatar (teal for trainers, terracotta for clients — a quick role tell at a glance), name + email, a small "Client"/"Trainer" chip, the user's current trainer-group name (or "Unassigned"), an Active/Inactive status chip, chevron. A **"+ Add user"** button sits above the list, top-right of the pane header.
+  - **Trainer groups tab:** a column-header row (Group / Timezone / Members) above a list of every trainer group — name, its `digest_timezone` in monospace, and a "N trainers · M clients" member count. A **"+ Add group"** button, same placement.
+  - Clicking any row selects it (highlighted outline) and populates the right pane; clicking "+ Add" creates a new blank record, selects it immediately, and opens the right pane already in edit mode for it.
+- **Right pane (fixed width, 380px):** three states, one of
+  - **Nothing selected:** a centered empty-state icon + "Select a user or trainer group to edit — or add a new one."
+  - **A user is selected ("Edit user" / "Add user"):** avatar + name + email header, then three pill-choice sections — **Role** (Client/Trainer, exactly one selected), **Trainer group** (one pill per existing group plus a "No group" option, exactly one selected — this is PRD's "assign/update/remove trainer group to user," all three actions collapsing to "which pill is currently selected"), **Status** (Active/Inactive). Footer: a red-tinted **"Delete"** button and a primary **"Done"** button.
+  - **A trainer group is selected ("Edit group" / "Add group"):** group name header, a **Timezone** pill row (a handful of common zones — UTC, Europe/Berlin, America/New_York, Asia/Kolkata — standing in for a full IANA picker), then **"Trainers in this group"** and **"Clients in this group"** — each a tap-to-toggle pill list over *every* trainer (or client) in the system: a filled pill means that person currently belongs to this group, tapping any pill adds or removes them from it immediately. Same footer pattern: **"Delete"** (unassigns every member back to "no group" before removing the group — no orphaned FK) and **"Done."**
+
+Two things worth flagging for implementation: first, this mockup intentionally does **not** show the admin login/password screen (ADR-004's shared-password gate) — it starts already authenticated, since the focus here is the CRUD screens themselves. Second, group membership is deliberately editable from *both* directions — a user's own panel has a "Trainer group" picker, and a group's own panel has toggle-pills over its members — because both are just the same `trainer_group_id` field viewed from either side of the relationship (ADR-005); a real implementation only needs the one `PUT /admin/users/{id}` endpoint underneath both interactions, not two different mechanisms.
+
+## 7. Slack Digest Preview (not a real app screen — a message mockup)
 
 **Viewport:** 480×760, styled as a Slack DM.
 
