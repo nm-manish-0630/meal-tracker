@@ -301,6 +301,7 @@ function copyLink() {
 
 .section-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin: 8px 0;
 }
@@ -380,5 +381,21 @@ function copyLink() {
   border-top: 1px solid var(--border);
   color: var(--text-secondary);
   font-size: 0.85em;
+}
+
+@media (max-width: 700px) {
+  .photos {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .photos {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .header-top h1 {
+    font-size: 24px;
+  }
 }
 </style>

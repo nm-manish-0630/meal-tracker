@@ -127,31 +127,33 @@ function statusNote(date: string) {
 
       <p v-if="loadingDays">Loading…</p>
 
-      <table v-if="selectedClient" class="days-table">
-        <thead>
-          <tr>
-            <th>Day</th>
-            <th>B</th>
-            <th>L</th>
-            <th>D</th>
-            <th>S</th>
-            <th>Status</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="day in days" :key="day.date">
-            <td>
-              <RouterLink :to="`/clients/${selectedClientId}/days/${day.date}`">{{ formatMonthDay(day.date) }}</RouterLink>
-            </td>
-            <td v-for="mealType in MEAL_TYPES" :key="mealType">{{ photoCount(day, mealType) || '—' }}</td>
-            <td class="status-note">{{ statusNote(day.date) }}</td>
-            <td>
-              <RouterLink :to="`/clients/${selectedClientId}/days/${day.date}`" class="chevron">›</RouterLink>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div v-if="selectedClient" class="days-table-scroll">
+        <table class="days-table">
+          <thead>
+            <tr>
+              <th>Day</th>
+              <th>B</th>
+              <th>L</th>
+              <th>D</th>
+              <th>S</th>
+              <th>Status</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="day in days" :key="day.date">
+              <td>
+                <RouterLink :to="`/clients/${selectedClientId}/days/${day.date}`">{{ formatMonthDay(day.date) }}</RouterLink>
+              </td>
+              <td v-for="mealType in MEAL_TYPES" :key="mealType">{{ photoCount(day, mealType) || '—' }}</td>
+              <td class="status-note">{{ statusNote(day.date) }}</td>
+              <td>
+                <RouterLink :to="`/clients/${selectedClientId}/days/${day.date}`" class="chevron">›</RouterLink>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <p v-if="selectedClient && !loadingDays && days.length === 0" class="empty">No meals logged in the last 14 days.</p>
     </main>
@@ -289,10 +291,15 @@ function statusNote(date: string) {
   color: var(--text-secondary);
 }
 
+.days-table-scroll {
+  overflow-x: auto;
+  margin-top: 24px;
+}
+
 .days-table {
   width: 100%;
+  min-width: 480px;
   border-collapse: collapse;
-  margin-top: 24px;
 }
 
 .days-table th,
@@ -314,5 +321,30 @@ function statusNote(date: string) {
 .empty {
   color: var(--text-secondary);
   margin-top: 24px;
+}
+
+@media (max-width: 768px) {
+  .trainer-dashboard {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .client-list {
+    max-height: 240px;
+  }
+
+  .main-pane {
+    padding: 16px;
+  }
+
+  .client-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
 }
 </style>
