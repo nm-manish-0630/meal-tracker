@@ -4,11 +4,12 @@ import { PrismaModule } from './prisma/prisma.module';
 import { MealsModule } from './meals/meals.module';
 import { DigestModule } from './digest/digest.module';
 import { AdminModule } from './admin/admin.module';
+import { TrainerModule } from './trainer/trainer.module';
 import { AppService } from './app.service';
 import { AppController } from './app.controller';
 
 @Module({
-  imports: [PrismaModule, MealsModule, DigestModule, AdminModule],
+  imports: [PrismaModule, MealsModule, DigestModule, AdminModule, TrainerModule],
   controllers: [AppController],
   providers: [AppService],
 })
