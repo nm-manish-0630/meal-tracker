@@ -12,6 +12,17 @@ async function extractErrorMessage(res: Response): Promise<string> {
   }
 }
 
+export interface ClientSummary {
+  id: string;
+  name: string;
+}
+
+export async function getClientSummary(clientId: string): Promise<ClientSummary> {
+  const res = await fetch(`${API_BASE_URL}/clients/${clientId}`);
+  if (!res.ok) throw new Error(await extractErrorMessage(res));
+  return res.json() as Promise<ClientSummary>;
+}
+
 export interface UploadUrlResponse {
   mealId: string;
   uploadUrl: string;

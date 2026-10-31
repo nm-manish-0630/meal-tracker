@@ -3,11 +3,20 @@ import { computed, ref, watch } from 'vue';
 import { MEAL_TYPES, type MealType } from '@repo/shared/meal-type';
 import { getTrainerClientMeals, getTrainerGroupClients, type HistoryMeal, type TrainerClientSummary } from '../lib/api';
 import { groupMealsByDate } from '../lib/group-by-date';
-import { dateToDateString, formatMonthDay, todayDateString } from '../lib/format-date';
+import { dateToDateString, formatMonthDay, formatRelativeDayTime, todayDateString } from '../lib/format-date';
 import { useGroupId } from '../lib/use-group-id';
 import ThemeToggle from '../components/ThemeToggle.vue';
 
 const groupId = useGroupId();
+
+// A local draft so typing a group id doesn't commit it (and swap the view away from
+// the input) character by character — only the explicit submit commits it.
+const groupIdDraft = ref('');
+function submitGroupId() {
+  const trimmed = groupIdDraft.value.trim();
+  if (trimmed) groupId.value = trimmed;
+}
+
 const clients = ref<TrainerClientSummary[]>([]);
 const selectedClientId = ref<string | null>(null);
 const clientMeals = ref<HistoryMeal[]>([]);
@@ -62,6 +71,11 @@ function photoCount(day: { meals: HistoryMeal[] }, mealType: MealType) {
   return day.meals.find((meal) => meal.mealType === mealType)?.photos.length ?? 0;
 }
 
+function lastUploadLabel(lastUploadAt: string | null): string {
+  if (!lastUploadAt) return 'No uploads today';
+  return `Uploaded ${formatRelativeDayTime(new Date(lastUploadAt))}`;
+}
+
 // Delivery status isn't exposed by the documented trainer-meals endpoint (System Design's
 // GET /trainer/clients/{id}/meals only returns meal history) — approximated here from the
 // same 7-day catch-up policy (ADR-011) the backend applies, not read from a real delivery row.
@@ -77,10 +91,16 @@ function statusNote(date: string) {
   <div class="trainer-dashboard">
     <aside class="sidebar">
       <div v-if="!groupId" class="group-id-setup">
-        <label>
-          Trainer group ID
-          <input v-model="groupId" type="text" placeholder="paste a trainer group id" />
-        </label>
+        <ThemeToggle class="toggle-row" />
+        <h1>Trainer Dashboard</h1>
+        <p class="subtitle">Enter your trainer group ID to see your clients.</p>
+        <form @submit.prevent="submitGroupId">
+          <label>
+            Trainer group ID
+            <input v-model="groupIdDraft" type="text" placeholder="paste a trainer group id" />
+          </label>
+          <button type="submit" :disabled="!groupIdDraft.trim()">Continue</button>
+        </form>
       </div>
       <template v-else>
         <div class="identity">
@@ -107,9 +127,7 @@ function statusNote(date: string) {
             <span class="client-avatar">{{ client.name.charAt(0).toUpperCase() }}</span>
             <span class="client-info">
               <span class="client-name">{{ client.name }}</span>
-              <span class="client-status">
-                {{ client.lastUploadAt ? `Uploaded ${client.lastUploadAt}` : 'No uploads today' }}
-              </span>
+              <span class="client-status">{{ lastUploadLabel(client.lastUploadAt) }}</span>
             </span>
             <span v-if="client.lastUploadAt" class="unread-dot" />
           </button>
@@ -173,11 +191,65 @@ function statusNote(date: string) {
   padding: 16px;
 }
 
+.group-id-setup {
+  max-width: 280px;
+  margin: 0 auto;
+  padding-top: 48px;
+  text-align: center;
+}
+
+.group-id-setup .toggle-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 24px;
+}
+
+.group-id-setup h1 {
+  font-size: 22px;
+}
+
+.group-id-setup .subtitle {
+  color: var(--text-secondary);
+  margin-top: 8px;
+  font-size: 0.9em;
+}
+
+.group-id-setup form {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.group-id-setup label {
+  display: block;
+}
+
 .group-id-setup input {
   display: block;
   width: 100%;
   min-height: 44px;
   margin-top: 4px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.group-id-setup button[type='submit'] {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 16px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.group-id-setup button[type='submit']:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .identity {

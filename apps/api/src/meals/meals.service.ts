@@ -82,6 +82,14 @@ export class MealsService {
     }
   }
 
+  async getClientSummary(clientId: string) {
+    const client = await this.prisma.user.findUnique({ where: { id: clientId } });
+    if (!client || client.role !== 'client') {
+      throw new NotFoundException('Client not found');
+    }
+    return { id: client.id, name: client.name };
+  }
+
   async getHistory(query: HistoryQueryInput) {
     const client = await this.prisma.user.findUnique({ where: { id: query.clientId } });
     if (!client) {
