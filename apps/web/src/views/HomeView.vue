@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useClientId } from '../lib/use-client-id';
-import { getHistory, type HistoryMeal } from '../lib/api';
+import { getClientSummary, getHistory, type HistoryMeal } from '../lib/api';
 import { groupMealsByDate } from '../lib/group-by-date';
 import { formatMonthDay, todayDateString } from '../lib/format-date';
 import ThemeToggle from '../components/ThemeToggle.vue';
@@ -14,6 +14,15 @@ if (typeof route.params.clientId === 'string' && route.params.clientId !== clien
   clientId.value = route.params.clientId;
 }
 
+// A local draft so typing a client id doesn't commit it (and swap the view away from
+// the input) character by character — only the explicit submit commits it.
+const clientIdDraft = ref('');
+function submitClientId() {
+  const trimmed = clientIdDraft.value.trim();
+  if (trimmed) clientId.value = trimmed;
+}
+
+const clientName = ref<string | null>(null);
 const meals = ref<HistoryMeal[]>([]);
 const loading = ref(false);
 const errorMessage = ref<string | null>(null);
@@ -26,7 +35,9 @@ async function load() {
   loading.value = true;
   errorMessage.value = null;
   try {
-    meals.value = await getHistory(clientId.value);
+    const [summary, history] = await Promise.all([getClientSummary(clientId.value), getHistory(clientId.value)]);
+    clientName.value = summary.name;
+    meals.value = history;
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Failed to load dashboard';
   } finally {
@@ -70,24 +81,29 @@ const compliance = computed(() => {
   return Math.round((logged / 7) * 100);
 });
 
-const avatarInitial = computed(() => clientId.value.trim().charAt(0).toUpperCase() || '?');
+const avatarInitial = computed(() => (clientName.value ?? clientId.value).trim().charAt(0).toUpperCase() || '?');
 </script>
 
 <template>
   <main class="dashboard">
     <div v-if="!clientId" class="client-id-setup">
+      <ThemeToggle class="toggle-row" />
       <h1>Meal Tracker</h1>
-      <label>
-        Client ID
-        <input v-model="clientId" type="text" placeholder="paste a client id" />
-      </label>
+      <p class="subtitle">Enter your client ID to see your meals.</p>
+      <form @submit.prevent="submitClientId">
+        <label>
+          Client ID
+          <input v-model="clientIdDraft" type="text" placeholder="paste a client id" />
+        </label>
+        <button type="submit" :disabled="!clientIdDraft.trim()">Continue</button>
+      </form>
     </div>
 
     <template v-else>
       <header class="header">
         <div class="greeting-row">
           <div>
-            <h1>Hi {{ clientId }}</h1>
+            <h1>Hi {{ clientName ?? clientId }}</h1>
             <p class="subtitle">Let's log today's meals</p>
           </div>
           <button type="button" class="avatar" title="Switch client ID" @click="clientId = ''">
@@ -144,16 +160,57 @@ const avatarInitial = computed(() => clientId.value.trim().charAt(0).toUpperCase
   padding: 16px;
 }
 
+.client-id-setup {
+  padding-top: 48px;
+  text-align: center;
+}
+
+.client-id-setup .toggle-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 24px;
+}
+
+.client-id-setup h1 {
+  font-size: 24px;
+}
+
+.client-id-setup form {
+  margin-top: 24px;
+  text-align: left;
+}
+
 .client-id-setup label {
   display: block;
-  margin-top: 16px;
 }
 
 .client-id-setup input {
   display: block;
   width: 100%;
-  margin-top: 4px;
   min-height: 44px;
+  margin-top: 4px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.client-id-setup button[type='submit'] {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 16px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.client-id-setup button[type='submit']:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .greeting-row {

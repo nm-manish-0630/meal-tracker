@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { MEAL_TYPES, type MealType } from '@repo/shared/meal-type';
 import {
+  getClientSummary,
   getHistory,
   updateMealType,
   deleteMeal,
@@ -17,6 +18,7 @@ import ThemeToggle from '../components/ThemeToggle.vue';
 
 const route = useRoute();
 
+const clientName = ref<string | null>(null);
 const meals = ref<HistoryMeal[]>([]);
 const loading = ref(false);
 const errorMessage = ref<string | null>(null);
@@ -35,7 +37,11 @@ async function load() {
   loading.value = true;
   errorMessage.value = null;
   try {
-    const result = await getHistory(clientId(), { from: date(), to: date() });
+    const [summary, result] = await Promise.all([
+      getClientSummary(clientId()),
+      getHistory(clientId(), { from: date(), to: date() }),
+    ]);
+    clientName.value = summary.name;
     meals.value = result.filter((meal) => meal.photos.length > 0);
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Failed to load this day';
@@ -119,7 +125,7 @@ function copyLink() {
   <main class="per-day">
     <header class="sticky-header">
       <div class="header-top">
-        <h1>{{ clientId() }} — {{ formatWeekdayMonthDay(date()) }}</h1>
+        <h1>{{ clientName ?? clientId() }} — {{ formatWeekdayMonthDay(date()) }}</h1>
         <ThemeToggle />
       </div>
       <p class="subtitle">Every meal photo logged this day, in one shareable page</p>
