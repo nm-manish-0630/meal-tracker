@@ -1,4 +1,5 @@
 import type { MealType } from '@repo/shared/meal-type';
+import { clearAdminSession, getStoredAdminPassword, setAdminSession } from './admin-auth';
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:3000';
 
@@ -126,4 +127,99 @@ export async function getTrainerClientMeals(
   const res = await fetch(`${API_BASE_URL}/trainer/clients/${clientId}/meals?${params.toString()}`);
   if (!res.ok) throw new Error(await extractErrorMessage(res));
   return res.json() as Promise<HistoryMeal[]>;
+}
+
+// --- Admin (ADR-004: shared-password protected) ---
+
+async function adminFetch(path: string, options: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(options.headers);
+  const password = getStoredAdminPassword();
+  if (password) headers.set('X-Admin-Password', password);
+  if (options.body !== undefined && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  const res = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
+  if (res.status === 401) {
+    clearAdminSession();
+    throw new Error('Admin session expired — please log in again');
+  }
+  if (!res.ok) throw new Error(await extractErrorMessage(res));
+  return res;
+}
+
+export async function adminLogin(password: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/admin/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  });
+  if (!res.ok) throw new Error(await extractErrorMessage(res));
+  setAdminSession(password);
+}
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  role: 'client' | 'trainer';
+  trainerGroupId: string | null;
+  isActive: boolean;
+}
+
+export interface SaveAdminUserInput {
+  name: string;
+  email: string;
+  role: 'client' | 'trainer';
+  trainerGroupId: string | null;
+  isActive: boolean;
+}
+
+export async function getAdminUsers(): Promise<AdminUser[]> {
+  const res = await adminFetch('/admin/users');
+  return res.json() as Promise<AdminUser[]>;
+}
+
+export async function createAdminUser(input: SaveAdminUserInput): Promise<AdminUser> {
+  const res = await adminFetch('/admin/users', { method: 'POST', body: JSON.stringify(input) });
+  return res.json() as Promise<AdminUser>;
+}
+
+export async function updateAdminUser(id: string, input: Partial<SaveAdminUserInput>): Promise<AdminUser> {
+  const res = await adminFetch(`/admin/users/${id}`, { method: 'PUT', body: JSON.stringify(input) });
+  return res.json() as Promise<AdminUser>;
+}
+
+export async function deleteAdminUser(id: string): Promise<void> {
+  await adminFetch(`/admin/users/${id}`, { method: 'DELETE' });
+}
+
+export interface AdminTrainerGroup {
+  id: string;
+  name: string;
+  digestTimezone: string;
+}
+
+export interface SaveAdminTrainerGroupInput {
+  name: string;
+  digestTimezone: string;
+}
+
+export async function getAdminTrainerGroups(): Promise<AdminTrainerGroup[]> {
+  const res = await adminFetch('/admin/trainer-groups');
+  return res.json() as Promise<AdminTrainerGroup[]>;
+}
+
+export async function createAdminTrainerGroup(input: SaveAdminTrainerGroupInput): Promise<AdminTrainerGroup> {
+  const res = await adminFetch('/admin/trainer-groups', { method: 'POST', body: JSON.stringify(input) });
+  return res.json() as Promise<AdminTrainerGroup>;
+}
+
+export async function updateAdminTrainerGroup(id: string, input: SaveAdminTrainerGroupInput): Promise<AdminTrainerGroup> {
+  const res = await adminFetch(`/admin/trainer-groups/${id}`, { method: 'PUT', body: JSON.stringify(input) });
+  return res.json() as Promise<AdminTrainerGroup>;
+}
+
+export async function deleteAdminTrainerGroup(id: string): Promise<void> {
+  await adminFetch(`/admin/trainer-groups/${id}`, { method: 'DELETE' });
 }
